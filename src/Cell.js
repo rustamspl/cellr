@@ -2,6 +2,7 @@ import EventEmitter from './EventEmitter';
 import {
     Class
 } from './JS/Object';
+//------------------------------------------------
 var Cell = Class(EventEmitter, function(_super) {
     var calcStack = [],
         seq = 0;
@@ -64,4 +65,5 @@ var Cell = Class(EventEmitter, function(_super) {
         }
     }
 });
+//------------------------------------------------
 export default Cell;
