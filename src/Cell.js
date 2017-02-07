@@ -1,53 +1,7 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.cellr = factory());
-}(this, (function () { 'use strict';
-
-//-------------
-
-//-------------
-
-//-------------
-function extend(dst, src) {
-    for (var i in src)
-        if (src.hasOwnProperty(i)) dst[i] = src[i];
-    return dst;
-}
-//-------------
-function Class(_super, _factory) {
-    var _proto = _factory(_super);
-    var _constructor = _proto._constructor;
-    delete _proto._constructor;
-    _constructor.prototype = _super.prototype ? extend(Object.create(_super.prototype), _proto) : _proto;
-    return _constructor;
-}
-//-------------
-
-var EventEmitter = Class({}, function(_super) {
-    return {
-        _constructor: function() {
-            this._callbacks = {};
-        },
-        emit: function(evt) {
-            var callbacks = this._callbacks[evt];
-            if (!(callbacks && callbacks.length)) return;
-            var args = [];
-            for (var i = 1, l = arguments.length; i < l; i++) {
-                args.push(arguments[i]);
-            }
-            for (var i = 0, l = callbacks.length; i < l; i++) {
-                callbacks[i].apply(this, args);
-            }
-        },
-        on: function(evt, cb) {
-            var callbacks = this._callbacks;
-            callbacks[evt] = callbacks[evt] || [];
-            callbacks[evt].push(cb);
-        }
-    };
-});
-
+import EventEmitter from './EventEmitter';
+import {
+    Class
+} from './JS/Object';
 var Cell = Class(EventEmitter, function(_super) {
     var calcStack = [],
         seq = 0;
@@ -106,15 +60,8 @@ var Cell = Class(EventEmitter, function(_super) {
                 var v = this._calc();
                 calcStack.pop();
                 this.set(v);
-            }
+            };
         }
     }
 });
-
-var cellr = {
-    Cell: Cell
-};
-
-return cellr;
-
-})));
+export default Cell;
