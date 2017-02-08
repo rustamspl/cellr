@@ -12,9 +12,11 @@ var Cell = Class(EventEmitter, function(_super) {
             this.id = ++seq;
             this.forwards = {};
             this.backwards = {};
+            this.level = 0;
             if (typeof v == 'function') {
                 this._calc = v;
                 this.sta = 0; //0:not assigned, 1:assigned, 2: calc
+                
             } else {
                 this.value = v;
                 this.sta = 1;
@@ -27,6 +29,9 @@ var Cell = Class(EventEmitter, function(_super) {
                 if (!(lastAtom.id in this.forwards)) {
                     this.forwards[lastAtom.id] = lastAtom;
                     lastAtom.backwards[this.id] = this;
+                }
+                if (lastAtom.level <= this.level) {
+                    lastAtom.level = this.level + 1;
                 }
             }
             switch (this.sta) {
