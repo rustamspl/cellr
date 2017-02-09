@@ -11,29 +11,32 @@ var Cell = Class(EventEmitter, function(_super) {
             levels: {}
         },
         planned = false,
-        planLevel = -1,
+        planLevel = -2,
         planRunning = false
 
     function getFirstPlanLevel() {
         for (var i in g.plan) return i;
-        return -1;
+        return -2;
     }
 
     function planRun(level) {
         //console.log('planRun', level);
         planRunning = true
         var plan = g.plan;
-        for (var i; i = getFirstPlanLevel(), i != -1; delete plan[i]) {
+        for (var i; i = getFirstPlanLevel(), i != -2; delete plan[i]) {
             //if (i > level && level >= 0) break;
             var q = plan[i];
             for (var j in q) {
-                q[j].calc();
+                var fw= q[j].forwards;
+                for (var i in fw) {
+                    fw[i].calc();
+                }
             }
         }
         g.plan = {};
         g.levels = {};
         planned = false;
-        planLevel = -1;
+        planLevel = -2;
         planRunning = false;
     }
     return {
@@ -67,7 +70,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 case 0:
                     this.calc();
             }
-            if (lastAtom && lastAtom.level <= this.level) {
+            if (lastAtom && this.level>=0 && lastAtom.level <= this.level) {
                 lastAtom.level = this.level + 1;
             }
             if (!planned && !planRunning) {
@@ -81,9 +84,10 @@ var Cell = Class(EventEmitter, function(_super) {
             this.value = v;
             this.sta = 1;
             if (needUpdate) {
-                for (var i in this.forwards) {
-                    this.forwards[i]._addToPlan();
-                }
+                // for (var i in this.forwards) {
+                //     this.forwards[i]._addToPlan();
+                // }
+                this._addToPlan();
                 this.emit('change', v);
             }
         },
@@ -120,7 +124,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 pLevel[thisId] = this
                 levels[thisId] = level
             }
-            if (planLevel == -1 || planLevel > level) {
+            if (planLevel == -2 || planLevel > level ) {
                 planLevel = level
             }
         }
