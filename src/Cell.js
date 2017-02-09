@@ -13,6 +13,7 @@ var Cell = Class(EventEmitter, function(_super) {
             levels: {}
         },
         planLevel = MAX2,
+        deep = 0,
         planRunning = false
 
     function getFirstPlanLevel() {
@@ -21,9 +22,13 @@ var Cell = Class(EventEmitter, function(_super) {
     }
 
     function planRun() {
+        //console.log('aaa',console.trace());
+        
+        
         planRunning = true
         var plan = g.plan;
         for (var i; i = getFirstPlanLevel(), i < MAX2; delete plan[i]) {
+          //  console.log('aaa',i);
             //if (i > level && level >= 0) break;
             var q = plan[i];
             for (var j in q) {
@@ -55,11 +60,14 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         calc: function() {
+                    //  console.log('sta2',this.sta);
             if (this._calc) {
+             //    console.log('calc',this.level);
                 this.sta = 1;
                 var oldBackwards = this.backwards;
                 this.backwards = {};
                 var savedCell = prevCell;
+                deep++;
                 prevCell = this;
                 var v = this._calc();
                 var newBackwards = this.backwards,
@@ -67,17 +75,34 @@ var Cell = Class(EventEmitter, function(_super) {
                 for (var i in oldBackwards)
                     if (!newBackwards[i]) delete oldBackwards[i].forwards[thisId];
                 prevCell = savedCell;
+                deep--;
                 this.set(v);
-              
             };
         },
         get: function() {
-            if (planLevel < this.level && !planRunning) {
+
+            var lastAtom = prevCell;
+            if (lastAtom) {
+                if (!(lastAtom.id in this.forwards)) {
+                    this.forwards[lastAtom.id] = lastAtom;
+                    lastAtom.backwards[this.id] = this;
+                }
+            }
+           
+
+            
+
+            if (planLevel < (this.level - 1) && !planRunning) {
+             //     console.log('planLevel',planLevel,this.level);
                 planRun();
             }
-            if (this.sta = 0) {
+
+            if (this.sta == 0) {
+
+                 
                 this.calc()
             }
+            
             return this.value;
         },
         set: function(v) {
@@ -89,6 +114,7 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         _addToPlan: function() {
+            //console.log('zzz');
             var level = this.level;
             var thisId = this.id;
             var plan = g.plan;
@@ -110,78 +136,6 @@ var Cell = Class(EventEmitter, function(_super) {
                 planLevel = level
             }
         }
-        // get: function() {
-        //     if (this.active) {
-        //         throw new Error('circular dependence');
-        //     }
-        //     var lastAtom = prevCell;
-        //     if (lastAtom) {
-        //         if (!(lastAtom.id in this.forwards)) {
-        //             this.forwards[lastAtom.id] = lastAtom;
-        //             lastAtom.backwards[this.id] = this;
-        //         }
-        //         if (this.level >= lastAtom.level) {
-        //             this.level = lastAtom.level - 1;
-        //         }
-        //     }
-        //     if (planned && !planRunning) {
-        //         planRun(this.level);
-        //     }
-        //     // console.log('get', this.id, this.level);
-        //     return this.value;
-        // },
-        // set: function(v) {
-        //     var needUpdate = !(this.value == v);
-        //     this.value = v;
-        //     this.sta = 1;
-        //     if (needUpdate) {
-        //         // for (var i in this.forwards) {
-        //         //     this.forwards[i]._addToPlan();
-        //         // }
-        //         this._addToPlan();
-        //         this.emit('change', v);
-        //     }
-        // },
-        // calc: function() {
-        //     if (this._calc) {
-        //         this.active = true;
-        //         var oldBackwards = this.backwards;
-        //         this.backwards = {};
-        //         var lastAtom = prevCell;
-        //         prevCell = this;
-        //         var v = this._calc();
-        //         var newBackwards = this.backwards,
-        //             thisId = this.id;
-        //         for (var i in oldBackwards)
-        //             if (!newBackwards[i]) delete oldBackwards[i].forwards[thisId];
-        //         prevCell = lastAtom;
-        //         this.set(v);
-        //         this.active = false;
-        //     };
-        // },
-        // _addToPlan: function() {
-        //     var level = this.level;
-        //     var thisId = this.id;
-        //     var plan = g.plan;
-        //     var levels = g.levels;
-        //     var pLevel = plan[level] || (plan[level] = {})
-        //     if (!pLevel[thisId]) {
-        //         if (thisId in levels) {
-        //             var oldLevel = levels[thisId];
-        //             if (oldLevel >= level) {
-        //                 return;
-        //             } else {
-        //                 delete plan[levels[thisId]][thisId];
-        //             }
-        //         }
-        //         pLevel[thisId] = this
-        //         levels[thisId] = level
-        //     }
-        //     if (planLevel > level) {
-        //         planLevel = level
-        //     }
-        //     planned = true
-        // }
     }
 });
 //------------------------------------------------
