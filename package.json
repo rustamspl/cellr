@@ -8,7 +8,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "build": "rollup -c && uglifyjs dst/cellr.js -c -m > dst/cellr.min.js ",
+    "build": "rollup -c ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

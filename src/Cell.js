@@ -7,27 +7,34 @@ var Cell = Class(EventEmitter, function(_super) {
     var calcStack = [],
         seq = 0,
         g = {
-            Plan: {},
-            Levels: {}
+            plan: {},
+            levels: {}
         },
-        PlanLevel = -1,
-        doingPlan = false
+        planned = false,
+        planLevel = -1,
+        planRunning = false
 
-    function doPlan() {
-        // if(doingPlan) return
-        doingPlan = true
-        var Plan = g.Plan;
-        //var Levels = g.Levels;
-        for (var i in Plan) {
-            var q = Plan[i];
+    function getFirstPlanLevel() {
+        for (var i in g.plan) return i;
+        return -1;
+    }
+
+    function planRun(level) {
+        //console.log('planRun', level);
+        planRunning = true
+        var plan = g.plan;
+        for (var i; i = getFirstPlanLevel(), i != -1; delete plan[i]) {
+            if (i > level && level >= 0) break;
+            var q = plan[i];
             for (var j in q) {
                 q[j].calc();
             }
         }
-        g.Plan = {};
-        g.Levels = {};
-        PlanLevel = -1;
-        doingPlan = false;
+        g.plan = {};
+        g.levels = {};
+        planned = false;
+        planLevel = -1;
+        planRunning = false;
     }
     return {
         _constructor: function(v) {
@@ -63,9 +70,10 @@ var Cell = Class(EventEmitter, function(_super) {
             if (lastAtom && lastAtom.level <= this.level) {
                 lastAtom.level = this.level + 1;
             }
-            if (PlanLevel != -1 && !doingPlan) {
-                doPlan();
+            if (!planned && !planRunning) {
+                planRun(this.level);
             }
+            // console.log('get', this.id, this.level);
             return this.value;
         },
         set: function(v) {
@@ -97,22 +105,22 @@ var Cell = Class(EventEmitter, function(_super) {
         _addToPlan: function() {
             var level = this.level;
             var thisId = this.id;
-            var Plan = g.Plan;
-            var Levels = g.Levels;
-            var planLevel = Plan[level] || (Plan[level] = {})
-            if (!planLevel[thisId]) {
-                if (thisId in Levels) {
-                    var oldLevel = Levels[thisId];
+            var plan = g.plan;
+            var levels = g.levels;
+            var pLevel = plan[level] || (plan[level] = {})
+            if (!pLevel[thisId]) {
+                if (thisId in levels) {
+                    var oldLevel = levels[thisId];
                     if (oldLevel <= level) {
                         return;
                     } else {
-                        delete Plan[Levels[thisId]][thisId];
+                        delete plan[levels[thisId]][thisId];
                     }
                 }
-                planLevel[thisId] = this
-                Levels[thisId] = level
+                pLevel[thisId] = this
+                levels[thisId] = level
             }
-            if (PlanLevel == -1 || PlanLevel > level) {
+            if (planLevel == -1 || planLevel > level) {
                 planLevel = level
             }
         }
