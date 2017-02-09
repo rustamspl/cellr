@@ -70,7 +70,7 @@ var Cell = Class(EventEmitter, function(_super) {
         planRunning = true;
         var plan = g.plan;
         for (var i; i = getFirstPlanLevel(), i != -1; delete plan[i]) {
-            if (i > level && level >= 0) break;
+            //if (i > level && level >= 0) break;
             var q = plan[i];
             for (var j in q) {
                 q[j].calc();
