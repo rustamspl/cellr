@@ -45,7 +45,7 @@ var Cell = Class(EventEmitter, function(_super) {
             _super.call(this);
             this.id = ++seq;
             this.forwards = {};
-            this.backwards = {};
+            this.backwards = {}; 
             if (typeof v == 'function') {
                 this._calc = v;
                 this.sta = 0 // 0:not set,1:calc 2:set
