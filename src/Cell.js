@@ -40,6 +40,7 @@ var Cell = Class(EventEmitter, function(_super) {
         g.plan = {};
         planRunning = false;
     }
+    //---------------------
     return {
         _constructor: function(v) {
             _super.call(this);
