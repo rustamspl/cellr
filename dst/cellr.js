@@ -66,14 +66,18 @@ var Cell = Class(EventEmitter, function(_super) {
     }
 
     function planRun() {
-         console.log('planRun');
+       // console.log('planRun');
         planRunning = true;
         var plan = g.plan;
-        for (var i; i = getFirst(plan), i >=0; delete plan[i]) {
-            console.log('plan i=',i);
+        for (var i; i = getFirst(plan), i >= 0; delete plan[i]) {
+            //console.log('plan i=', i);
             var q = plan[i];
-            for (var j; j = getFirst(q), j >=0; delete q[j]) {
-                var fw = q[j].forwards;
+            for (var j in q) {
+                var c = q[j];
+                if (c.sta == 0) {
+                    c.calc();
+                }
+                var fw = c.forwards;
                 for (var i in fw) {
                     fw[i].calc();
                 }
@@ -126,18 +130,16 @@ var Cell = Class(EventEmitter, function(_super) {
                 this._addToPlan();
             }
             if (planLevel <= this.level && !planRunning) {
-                 console.log('!!planLevel',planLevel,this.level);
+                //console.log('!!planLevel', planLevel, this.level);
                 planRun();
             }
-
-
             if (savedCell) {
-                console.log('savedCell');
+               // console.log('savedCell');
                 if (savedCell.level <= this.level) {
                     savedCell._setLevel(this.level + 1);
                 }
             }
-            console.log('get()=',this.value);
+            //console.log('get()=', this.value);
             return this.value;
         },
         set: function(v) {
@@ -156,9 +158,8 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         _setLevel: function(level) {
-           // if(level==0)
-           // console.log(this.id,'_setLevel',level,console.trace());
-
+            // if(level==0)
+            // console.log(this.id,'_setLevel',level,console.trace());
             var thisId = this.id;
             var plan = g.plan;
             var levels = g.levels;
