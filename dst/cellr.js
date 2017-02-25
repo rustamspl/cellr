@@ -59,6 +59,7 @@ var Cell = Class(EventEmitter, function(_super) {
         },
         planRunning = false,
         planLevel = MAX;
+    window.r2g = g;
 
     function getFirst(map) {
         for (var i in map) return i;
@@ -66,7 +67,7 @@ var Cell = Class(EventEmitter, function(_super) {
     }
 
     function planRun() {
-       // console.log('planRun');
+        // console.log('planRun');
         planRunning = true;
         var plan = g.plan;
         for (var i; i = getFirst(plan), i >= 0; delete plan[i]) {
@@ -84,6 +85,7 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         }
         g.plan = {};
+        g.levels = {};
         planRunning = false;
     }
     return {
@@ -134,8 +136,8 @@ var Cell = Class(EventEmitter, function(_super) {
                 planRun();
             }
             if (savedCell) {
-               // console.log('savedCell');
-                if (savedCell.level <= this.level) {
+                // console.log('savedCell');
+                if (savedCell.level <= this.level) {                 
                     savedCell._setLevel(this.level + 1);
                 }
             }
@@ -158,6 +160,7 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         _setLevel: function(level) {
+            this.level=level;
             // if(level==0)
             // console.log(this.id,'_setLevel',level,console.trace());
             var thisId = this.id;
