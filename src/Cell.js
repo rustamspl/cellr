@@ -29,9 +29,7 @@ var Cell = Class(EventEmitter, function(_super) {
             var q = plan[i];
             for (var j in q) {
                 var c = q[j];
-                if (c.sta == 0) {
-                    c.calc()
-                }
+           
                 var fw = c.forwards;
                 for (var i in fw) {
                     fw[i].calc();
@@ -84,7 +82,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 }
             }
             if (this.sta == 0) {
-                this._addToPlan()
+                this.calc();
             }
             if (planLevel <= this.level && !planRunning) {
                 //console.log('!!planLevel', planLevel, this.level);
