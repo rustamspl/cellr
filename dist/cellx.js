@@ -1775,10 +1775,11 @@ var pendingReactions = [];
 var afterReleaseCallbacks;
 
 function release() {
+	incCnt('x.release');
 	if (!releasePlanned) {
 		return;
 	}
-
+	incCnt('x.release1');
 	releasePlanned = false;
 	currentlyRelease = true;
 
@@ -2062,6 +2063,7 @@ var Cell = EventEmitter.extend({
 	},
 
 	constructor: function Cell(value, opts) {
+		incCnt('x.constructor');
 		EventEmitter.call(this);
 
 		if (!opts) {
@@ -2297,6 +2299,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign (slave: cellx.Cell);
 	 */
 	_registerSlave: function _registerSlave(slave) {
+		incCnt('x._registerSlave');
 		this._activate();
 
 		this._slaves.push(slave);
@@ -2379,6 +2382,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign ();
 	 */
 	_addToRelease: function _addToRelease() {
+		incCnt('x._addToRelease');
 		var level = this._level;
 
 		if (level <= this._levelInRelease) {
@@ -2435,6 +2439,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign () -> *;
 	 */
 	get: function get() {
+		incCnt('x.get');
 		if (releasePlanned && this._pull) {
 			release();
 		}
@@ -2488,6 +2493,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign () -> boolean;
 	 */
 	pull: function pull() {
+		incCnt('x.pull');
 		if (!this._pull) {
 			return false;
 		}
@@ -2555,6 +2561,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign () -> *;
 	 */
 	_tryPull: function _tryPull() {
+		incCnt('x._tryPull');
 		if (this._currentlyPulling) {
 			throw new TypeError('Circular pulling detected');
 		}
@@ -2723,6 +2730,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign (value) -> cellx.Cell;
 	 */
 	set: function set(value) {
+		incCnt('x.set');
 		var oldValue = this._value;
 
 		if (this._validate) {
@@ -2752,6 +2760,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign (value) -> cellx.Cell;
 	 */
 	push: function push$$1(value) {
+		incCnt('x.push');
 		this._push(value, true, false);
 		return this;
 	},
@@ -2760,6 +2769,7 @@ var Cell = EventEmitter.extend({
 	 * @typesign (value, external: boolean, pulling: boolean) -> boolean;
 	 */
 	_push: function _push(value, external, pulling) {
+		incCnt('x._push');
 		this._inited = true;
 
 		var oldValue = this._value;
