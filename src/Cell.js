@@ -15,6 +15,7 @@ var Cell = Class(EventEmitter, function(_super) {
         planEnd = -1;
 
     function planRun() {
+        incCnt('r.planRun');
         planRunning = true
         for (var i = planBegin; i <= planEnd; i++) {
             var q = plan.get(i);
@@ -32,6 +33,7 @@ var Cell = Class(EventEmitter, function(_super) {
     //---------------------
     return {
         _constructor: function(v) {
+            incCnt('r._constructor');
             _super.call(this);
             this._id=++seq;
             this.forwards = new Set();
@@ -47,6 +49,7 @@ var Cell = Class(EventEmitter, function(_super) {
             this.level = 0;
         },
         calc: function() {
+            incCnt('r.calc');
             if (this._calc) {
                 this.sta = 1;
                 var savedCell = lastCell;
@@ -63,6 +66,7 @@ var Cell = Class(EventEmitter, function(_super) {
             };
         },
         get: function() {
+            incCnt('r.get');
             var savedCell = lastCell;
             if (savedCell) {
                 if (!this.forwards.has(savedCell)) {
@@ -91,6 +95,7 @@ var Cell = Class(EventEmitter, function(_super) {
             return this._val;
         },
         set: function(v) {
+            incCnt('r.set');
             var needUpdate = !(this._val == v);
             this._val = v;
             this.sta = 2
@@ -99,11 +104,13 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         _addToPlan: function() {
+            incCnt('r._addToPlan');
             var level = this.level;
             this._setLevel(level)
             
         },
         _setLevel: function(level) {
+            incCnt('r._setLevel');
             this.level = level;
             var pLevel = plan.get(level)
             if (!pLevel) {
