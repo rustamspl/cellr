@@ -1,2 +1,3 @@
-export default  var global = Function('return this;')();
+ var global = Function('return this;')();
+ export default global;
 
