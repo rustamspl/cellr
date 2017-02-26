@@ -61,15 +61,16 @@ var Cell = Class(EventEmitter, function(_super) {
         plan = new Map(),
         planRunning = false,
         planBegin = MAX,
-        seq=0,
+        seq = 0,
         planEnd = -1;
 
     function planRun() {
+        incCnt('r.planRun');
         planRunning = true;
         for (var i = planBegin; i <= planEnd; i++) {
             var q = plan.get(i);
             for (var c, it = q.values(); c = it.next().value;) {
-                for (var cf, it1 = c.forwards.values(); cf = it1.next().value;) {                  
+                for (var cf, it1 = c.forwards.values(); cf = it1.next().value;) {
                     cf.calc();
                 }
             }
@@ -82,8 +83,9 @@ var Cell = Class(EventEmitter, function(_super) {
     //---------------------
     return {
         _constructor: function(v) {
+            incCnt('r._constructor');
             _super.call(this);
-            this._id=++seq;
+            this._id = ++seq;
             this.forwards = new Set();
             this.backwards = new Set();
             this.oldLevel = -1;
@@ -97,6 +99,7 @@ var Cell = Class(EventEmitter, function(_super) {
             this.level = 0;
         },
         calc: function() {
+            incCnt('r.calc');
             if (this._calc) {
                 this.sta = 1;
                 var savedCell = lastCell;
@@ -109,10 +112,11 @@ var Cell = Class(EventEmitter, function(_super) {
                     if (!newBackwards.has(v)) v.forwards.delete(this);
                 }
                 lastCell = savedCell;
-                this.set(val);
+                this.set1(val);
             }
         },
         get: function() {
+            incCnt('r.get');
             var savedCell = lastCell;
             if (savedCell) {
                 if (!this.forwards.has(savedCell)) {
@@ -134,13 +138,22 @@ var Cell = Class(EventEmitter, function(_super) {
                 }
             }
             //console.log('get()=', this.value);
-            if(typeof this._val == 'undefined'){
-
+            if (typeof this._val == 'undefined') {
                 throw new Error('undefined val');
             }
             return this._val;
         },
+        set1: function(v) {
+            incCnt('r.set1');
+            var needUpdate = !(this._val == v);
+            this._val = v;
+            this.sta = 2;
+            if (needUpdate) {
+                this._addToPlan();
+            }
+        },
         set: function(v) {
+            incCnt('r.set');
             var needUpdate = !(this._val == v);
             this._val = v;
             this.sta = 2;
@@ -149,32 +162,29 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         _addToPlan: function() {
-            var level = this.level;
-            this._setLevel(level);
-            
+            incCnt('r._addToPlan');
+            this._setLevel(this.level);
         },
         _setLevel: function(level) {
+            var oldLevel = this.level;
+            incCnt('r._setLevel');
             this.level = level;
             var pLevel = plan.get(level);
             if (!pLevel) {
                 pLevel = new Set();
                 plan.set(level, pLevel);
-               
             }
-             if (level < planBegin) {
-                    planBegin = level;
-                }
-                if (level > planEnd) {
-                    planEnd = level;
-                }
-            if (!pLevel.has(this)) {
-                var oldLevel = this.oldLevel;
-                if (oldLevel >= 0) {
-                    plan.get(oldLevel).delete(this);
-                }
-                pLevel.add(this);
+            if (level < planBegin) {
+                planBegin = level;
             }
-            this.oldLevel = level;
+            if (level > planEnd) {
+                planEnd = level;
+            }
+            // var old = plan.get(oldLevel);
+            // if (old) {
+            //     old.delete(this);
+            // }
+            pLevel.add(this);
         }
     }
 });

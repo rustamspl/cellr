@@ -11,7 +11,7 @@ var Cell = Class(EventEmitter, function(_super) {
         plan = new Map(),
         planRunning = false,
         planBegin = MAX,
-        seq=0,
+        seq = 0,
         planEnd = -1;
 
     function planRun() {
@@ -20,7 +20,7 @@ var Cell = Class(EventEmitter, function(_super) {
         for (var i = planBegin; i <= planEnd; i++) {
             var q = plan.get(i);
             for (var c, it = q.values(); c = it.next().value;) {
-                for (var cf, it1 = c.forwards.values(); cf = it1.next().value;) {                  
+                for (var cf, it1 = c.forwards.values(); cf = it1.next().value;) {
                     cf.calc();
                 }
             }
@@ -35,7 +35,7 @@ var Cell = Class(EventEmitter, function(_super) {
         _constructor: function(v) {
             incCnt('r._constructor');
             _super.call(this);
-            this._id=++seq;
+            this._id = ++seq;
             this.forwards = new Set();
             this.backwards = new Set();
             this.oldLevel = -1;
@@ -88,8 +88,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 }
             }
             //console.log('get()=', this.value);
-            if(typeof this._val == 'undefined'){
-
+            if (typeof this._val == 'undefined') {
                 throw new Error('undefined val');
             }
             return this._val;
@@ -105,33 +104,28 @@ var Cell = Class(EventEmitter, function(_super) {
         },
         _addToPlan: function() {
             incCnt('r._addToPlan');
-            var level = this.level;
-            this._setLevel(level)
-            
+            this._setLevel(this.level)
         },
         _setLevel: function(level) {
+            var oldLevel = this.level;
             incCnt('r._setLevel');
             this.level = level;
             var pLevel = plan.get(level)
             if (!pLevel) {
                 pLevel = new Set();
                 plan.set(level, pLevel);
-               
             }
-             if (level < planBegin) {
-                    planBegin = level;
-                }
-                if (level > planEnd) {
-                    planEnd = level;
-                }
-            if (!pLevel.has(this)) {
-                var oldLevel = this.oldLevel;
-                if (oldLevel >= 0) {
-                    plan.get(oldLevel).delete(this);
-                }
-                pLevel.add(this);
+            if (level < planBegin) {
+                planBegin = level;
             }
-            this.oldLevel = level
+            if (level > planEnd) {
+                planEnd = level;
+            }
+            var old = plan.get(oldLevel);
+            if (old) {
+                old.delete(this);
+            }
+            pLevel.add(this);
         }
     }
 });
