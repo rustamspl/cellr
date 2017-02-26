@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "rollup": "^0.41.4"
+    "rollup": "^0.41.4",
+    "uglifyjs": "^2.4.10"
   },
   "devDependencies": {},
   "scripts": {
