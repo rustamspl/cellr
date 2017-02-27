@@ -63,22 +63,32 @@ var Cell = Class(EventEmitter, function(_super) {
         planBegin = MAX,
         planEnd = -1,
         seq = 0;
+    //----------
+    function processPlanned(c) {
+        c.calc();
+    }
+    //-------
+    function fnAddToPlan(v) {
+        v._addToPlan();
+    }
+    //-------
+    function fn1(v) {
+        if (!this.backwards.has(v)) v.forwards.delete(this);
+    }
 
     function planRun() {
         incCnt('r.planRun');
         planRunning = true;
         console.log(planBegin, planEnd, plan);
         for (var i = planBegin; i <= planEnd; i++) {
-            var q = plan.get(i);            
-            for (var c, it = q.values(); c = it.next().value;) {
-                c.calc();
-            }            
+            plan.get(i).forEach(processPlanned);
         }
         plan.clear();
         planBegin = MAX;
         planEnd = -1;
         planRunning = false;
     }
+    //---------------------
     //---------------------
     return {
         _constructor: function(v) {
@@ -106,9 +116,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 this.backwards = new Set();
                 var val = this._calc();
                 var newBackwards = this.backwards;
-                for (var v, it = oldBackwards.values(); v = it.next().value;) {
-                    if (!newBackwards.has(v)) v.forwards.delete(this);
-                }
+                oldBackwards.forEach(fn1, this);
                 lastCell = savedCell;
                 this.set(val);
             }
@@ -118,7 +126,6 @@ var Cell = Class(EventEmitter, function(_super) {
             incCnt('r.get');
             var savedCell = lastCell;
             // if (savedCell) {
-               
             // }
             if (this.sta == 0) {
                 this._addToPlan();
@@ -128,7 +135,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 planRun();
             }
             if (savedCell) {
-                 if (!this.forwards.has(savedCell)) {
+                if (!this.forwards.has(savedCell)) {
                     this.forwards.add(savedCell);
                     savedCell.backwards.add(this);
                 }
@@ -149,9 +156,7 @@ var Cell = Class(EventEmitter, function(_super) {
             this._val = v;
             this.sta = 2;
             if (needUpdate) {
-                for (var v, it = this.forwards.values(); v = it.next().value;) {
-                    v._addToPlan();
-                }
+                this.forwards.forEach(fnAddToPlan);
             }
         },
         _addToPlan: function() {
