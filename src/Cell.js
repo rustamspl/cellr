@@ -7,7 +7,7 @@ import Set from './JS/Set';
 //------------------------------------------------
 var Cell = Class(EventEmitter, function(_super) {
     var lastCell = null,
-        MAX = 1000000000,
+        MAX = (Number.MAX_SAFE_INTEGER || 0x1fffffffffffff) - 1,
         plan = new Map(),
         planRunning = false,
         planBegin = MAX,
@@ -15,7 +15,6 @@ var Cell = Class(EventEmitter, function(_super) {
         seq = 0;
 
     function planRun() {
-        incCnt('r.planRun');
         planRunning = true;
         for (var i = planBegin; i <= planEnd; i++) {
             var q = plan.get(i);
@@ -31,12 +30,12 @@ var Cell = Class(EventEmitter, function(_super) {
     //---------------------
     return {
         _constructor: function(v) {
-            incCnt('r._constructor');
             _super.call(this);
             this._id = ++seq;
             this.forwards = new Set();
             this.backwards = new Set();
             this.level = 0;
+            this.planLevel = -1;
             if (typeof v == 'function') {
                 this._calc = v;
                 this.sta = 0 // 0:not set,1:calc 2:set                
@@ -46,24 +45,21 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         calc: function() {
-            incCnt('r.calc');
             if (this._calc) {
                 if (this.sta == 1) {
                     throw new Error('circular');
                 }
                 this.sta = 1;
-               
-                if(!planRunning){
-                    var oldBackwards = this.backwards;
-                    var newBackwards = new Set();
-                    this.backwards = newBackwards;
-                }
-                
+                //  if(!planRunning){
+                var oldBackwards = this.backwards;
+                var newBackwards = new Set();
+                this.backwards = newBackwards;
+                //}
                 var savedCell = lastCell;
                 lastCell = this;
                 var val = this._calc();
                 lastCell = savedCell;
-                if(!planRunning)
+                //  if(!planRunning)
                 for (var v, it = oldBackwards.values(); v = it.next().value;) {
                     if (!newBackwards.has(v)) {
                         v.forwards.delete(this);
@@ -74,7 +70,6 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         get: function() {
-            incCnt('r.get');
             var savedCell = lastCell;
             if (savedCell) {
                 this.forwards.add(savedCell);
@@ -94,7 +89,6 @@ var Cell = Class(EventEmitter, function(_super) {
             return this._val;
         },
         set: function(v) {
-            incCnt('r.set');
             var needUpdate = !(this._val == v);
             this._val = v;
             this.sta = 2
@@ -105,7 +99,6 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         _addToPlan: function() {
-            incCnt('r._addToPlan');
             var level = this.level;
             var oldLevel = this.planLevel;
             if (oldLevel == level) return;
