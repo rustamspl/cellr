@@ -67,12 +67,11 @@ var Cell = Class(EventEmitter, function(_super) {
     function planRun() {
         incCnt('r.planRun');
         planRunning = true;
-        console.log(planBegin, planEnd, plan);
         for (var i = planBegin; i <= planEnd; i++) {
-            var q = plan.get(i);            
+            var q = plan.get(i);
             for (var c, it = q.values(); c = it.next().value;) {
                 c.calc();
-            }            
+            }
         }
         plan.clear();
         planBegin = MAX;
@@ -99,47 +98,45 @@ var Cell = Class(EventEmitter, function(_super) {
         calc: function() {
             incCnt('r.calc');
             if (this._calc) {
+                if (this.sta == 1) {
+                    throw new Error('circular');
+                }
                 this.sta = 1;
+                var oldBackwards = this.backwards;
+                var newBackwards = new Set();
+                if(!planRunning)
+                this.backwards = newBackwards;
                 var savedCell = lastCell;
                 lastCell = this;
-                var oldBackwards = this.backwards;
-                this.backwards = new Set();
                 var val = this._calc();
-                var newBackwards = this.backwards;
-                for (var v, it = oldBackwards.values(); v = it.next().value;) {
-                    if (!newBackwards.has(v)) v.forwards.delete(this);
-                }
                 lastCell = savedCell;
+                if(!planRunning)
+                for (var v, it = oldBackwards.values(); v = it.next().value;) {
+                    if (!newBackwards.has(v)) {
+                        v.forwards.delete(this);
+                    }
+                }
+                this.planLevel = -1;
                 this.set(val);
             }
-            this.planLevel = -1;
         },
         get: function() {
             incCnt('r.get');
             var savedCell = lastCell;
-            // if (savedCell) {
-               
-            // }
+            if (savedCell) {
+                this.forwards.add(savedCell);
+                savedCell.backwards.add(this);
+            }
             if (this.sta == 0) {
                 this._addToPlan();
             }
             if (planBegin <= this.level && !planRunning) {
-                //console.log('!!planBegin', planBegin, this.level);
                 planRun();
             }
             if (savedCell) {
-                 if (!this.forwards.has(savedCell)) {
-                    this.forwards.add(savedCell);
-                    savedCell.backwards.add(this);
-                }
                 if (savedCell.level <= this.level) {
                     savedCell.level = this.level + 1;
-                    savedCell._addToPlan();
                 }
-            }
-            //console.log('get()=', this.value);
-            if (typeof this._val == 'undefined') {
-                throw new Error('undefined val');
             }
             return this._val;
         },
@@ -155,19 +152,20 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         _addToPlan: function() {
+            incCnt('r._addToPlan');
             var level = this.level;
-            var pLevel = plan.get(level);
-            if (!pLevel) {
-                pLevel = new Set();
-                plan.set(level, pLevel);
-            }
-            pLevel.add(this);
             var oldLevel = this.planLevel;
-            if (oldLevel >= 0 && oldLevel != level) {
+            if (oldLevel == level) return;
+            if (oldLevel > level) {
                 var old = plan.get(oldLevel);
                 if (old) {
                     old.delete(this);
                 }
+            }
+            var pLevel = plan.get(level);
+            if (!pLevel) {
+                pLevel = new Set();
+                plan.set(level, pLevel);
             }
             pLevel.add(this);
             this.planLevel = level;
