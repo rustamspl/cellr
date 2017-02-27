@@ -1,3 +1,4 @@
+'use strict';
 import Cell from './Cell';
 
 var cellr = {
