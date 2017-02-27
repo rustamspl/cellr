@@ -129,27 +129,6 @@ var Cell = Class(EventEmitter, function(_super) {
                 planEnd = level;
             }
         }
-        // ,_setLevel: function(level) {
-        //     var oldLevel = this.level;
-        //     incCnt('r._setLevel');
-        //     this.level = level;
-        //     var pLevel = plan.get(level)
-        //     if (!pLevel) {
-        //         pLevel = new Set();
-        //         plan.set(level, pLevel);
-        //     }
-        //     if (level < planBegin) {
-        //         planBegin = level;
-        //     }
-        //     if (level > planEnd) {
-        //         planEnd = level;
-        //     }
-        //     var old = plan.get(oldLevel);
-        //     if (old) {
-        //         old.delete(this);
-        //     }
-        //     pLevel.add(this);
-        // }
     }
 });
 //------------------------------------------------
