@@ -2,13 +2,13 @@ import EventEmitter from './EventEmitter';
 import {
     Class
 } from './JS/Object';
-import Map from './JS/Map';
-import Set from './JS/Set';
 //------------------------------------------------
 var Cell = Class(EventEmitter, function(_super) {
     var lastCell = null,
         MAX = (Number.MAX_SAFE_INTEGER || 0x1fffffffffffff) - 1,
-        plan = new Map(),
+        g = {
+            plan: Object.create(null)
+        },
         planRunning = false,
         planBegin = MAX,
         planEnd = -1,
@@ -16,13 +16,14 @@ var Cell = Class(EventEmitter, function(_super) {
 
     function planRun() {
         planRunning = true;
+        var plan = g.plan;
         for (var i = planBegin; i <= planEnd; i++) {
-            var q = plan.get(i);
-            for (var c, it = q.values(); c = it.next().value;) {
-                c.calc();
+            var q = plan[i];
+            for (var j in q) {
+                q[j].calc();
             }
         }
-        plan.clear();
+        g.plan = Object.create(null);
         planBegin = MAX;
         planEnd = -1;
         planRunning = false;
@@ -31,9 +32,9 @@ var Cell = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(v) {
             _super.call(this);
-            this._id = ++seq;
-            this.forwards = new Set();
-            this.backwards = new Set();
+            this.id = ++seq;
+            this.forwards = Object.create(null);
+            this.backwards = Object.create(null);
             this.level = 0;
             this.planLevel = -1;
             if (typeof v == 'function') {
@@ -52,7 +53,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 this.sta = 1;
                 //  if(!planRunning){
                 var oldBackwards = this.backwards;
-                var newBackwards = new Set();
+                var newBackwards = Object.create(null);
                 this.backwards = newBackwards;
                 //}
                 var savedCell = lastCell;
@@ -60,9 +61,9 @@ var Cell = Class(EventEmitter, function(_super) {
                 var val = this._calc();
                 lastCell = savedCell;
                 //  if(!planRunning)
-                for (var v, it = oldBackwards.values(); v = it.next().value;) {
-                    if (!newBackwards.has(v)) {
-                        v.forwards.delete(this);
+                for (var i in oldBackwards) {
+                    if (!(i in newBackwards)) {
+                        delete oldBackwards[i].forwards[this.id];
                     }
                 }
                 this.planLevel = -1;
@@ -72,8 +73,8 @@ var Cell = Class(EventEmitter, function(_super) {
         get: function() {
             var savedCell = lastCell;
             if (savedCell) {
-                this.forwards.add(savedCell);
-                savedCell.backwards.add(this);
+                this.forwards[savedCell.id] = savedCell;
+                savedCell.backwards[this.id] = this;
             }
             if (this.sta == 0) {
                 this._addToPlan();
@@ -93,27 +94,29 @@ var Cell = Class(EventEmitter, function(_super) {
             this._val = v;
             this.sta = 2
             if (needUpdate) {
-                for (var v, it = this.forwards.values(); v = it.next().value;) {
-                    v._addToPlan();
+                var fw = this.forwards;
+                for (var i in fw) {
+                    fw[i]._addToPlan();
                 }
             }
         },
         _addToPlan: function() {
             var level = this.level;
             var oldLevel = this.planLevel;
+            var plan = g.plan;
             if (oldLevel == level) return;
             if (oldLevel > level) {
-                var old = plan.get(oldLevel);
+                var old = plan[oldLevel];
                 if (old) {
-                    old.delete(this);
+                    delete old[this.id];
                 }
             }
-            var pLevel = plan.get(level)
+            var pLevel = plan[level]
             if (!pLevel) {
-                pLevel = new Set();
-                plan.set(level, pLevel);
+                pLevel = Object.create(null);
+                plan[level] = pLevel;
             }
-            pLevel.add(this);
+            pLevel[this.id] = this;
             this.planLevel = level;
             if (level < planBegin) {
                 planBegin = level;
