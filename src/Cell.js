@@ -7,7 +7,6 @@ import Set from './JS/Set';
 //------------------------------------------------
 var Cell = Class(EventEmitter, function(_super) {
     var lastCell = null,
-
         MAX = (Number.MAX_SAFE_INTEGER || 0x1fffffffffffff) - 1,
         plan = new Map(),
         planRunning = false,
@@ -28,10 +27,8 @@ var Cell = Class(EventEmitter, function(_super) {
     }
 
     function planRun() {
-
         planRunning = true;
-
-        for (var i = planBegin; i <= planEnd; i++) {          
+        for (var i = planBegin; i <= planEnd; i++) {
             plan.get(i).forEach(processPlanned);
         }
         plan.clear();
@@ -43,7 +40,6 @@ var Cell = Class(EventEmitter, function(_super) {
     //---------------------
     return {
         _constructor: function(v) {
-
             _super.call(this);
             this._id = ++seq;
             this.forwards = new Set();
@@ -59,35 +55,25 @@ var Cell = Class(EventEmitter, function(_super) {
             }
         },
         calc: function() {
-
             if (this._calc) {
                 if (this.sta == 1) {
                     throw new Error('circular');
                 }
                 this.sta = 1;
-  
                 var oldBackwards = this.backwards;
                 var newBackwards = new Set();
                 this.backwards = newBackwards;
-  
                 var savedCell = lastCell;
                 lastCell = this;
-
                 var val = this._calc();
-
                 lastCell = savedCell;
-       
                 oldBackwards.forEach(fn1, this);
-
                 this.planLevel = -1;
                 this.set(val);
- 
             }
         },
         get: function() {
-
             var savedCell = lastCell;
-       
             if (savedCell) {
                 this.forwards.add(savedCell);
                 savedCell.backwards.add(this);
@@ -96,35 +82,26 @@ var Cell = Class(EventEmitter, function(_super) {
                 this._addToPlan();
             }
             if (planBegin <= this.level && !planRunning) {
-
                 planRun();
             }
             if (savedCell) {
-
-
                 if (savedCell.level <= this.level) {
                     savedCell.level = this.level + 1;
-                    
                 }
             }
-
             return this._val;
         },
         set: function(v) {
-
             var needUpdate = !(this._val == v);
             this._val = v;
             this.sta = 2
             if (needUpdate) {
-
                 this.forwards.forEach(fnAddToPlan);
             }
         },
         _addToPlan: function() {
             var level = this.level;
-
             var oldLevel = this.planLevel;
-
             if (oldLevel == level) return;
             if (oldLevel > level) {
                 var old = plan.get(oldLevel);
@@ -146,7 +123,6 @@ var Cell = Class(EventEmitter, function(_super) {
                 planEnd = level;
             }
         }
-     
     }
 });
 //------------------------------------------------
