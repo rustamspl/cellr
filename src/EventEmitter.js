@@ -5,10 +5,10 @@ import {
 var EventEmitter = Class({}, function(_super) {
     return {
         _constructor: function() {
-            this._callbacks = {};
+            this._cbs = {};
         },
         emit: function(evt) {
-            var callbacks = this._callbacks[evt];
+            var callbacks = this._cbs[evt];
             if (!(callbacks && callbacks.length)) return;
             var args = [];
             for (var i = 1, l = arguments.length; i < l; i++) {
@@ -19,7 +19,7 @@ var EventEmitter = Class({}, function(_super) {
             }
         },
         on: function(evt, cb) {
-            var callbacks = this._callbacks;
+            var callbacks = this._cbs;
             callbacks[evt] = callbacks[evt] || [];
             callbacks[evt].push(cb);
         }

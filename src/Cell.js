@@ -3,10 +3,10 @@ import {
     Class
 } from './JS/Object';
 //------------------------------------------------
-var Cell = Class(EventEmitter, function(_super) {
-    var lastCell = null,
+var Atom = Class(EventEmitter, function(_super) {
+    var lastAtom = null,
         g = {
-            plan: {}
+            pl: {}
         },
         planRunning = false,
         planBegin = 1,
@@ -15,14 +15,14 @@ var Cell = Class(EventEmitter, function(_super) {
     //-------
     function planRun() {
         planRunning = true;
-        var plan = g.plan;
+        var plan = g.pl;
         for (var i = planBegin; i <= planEnd; i++) {
             var q = plan[i];
             for (var j = 0, l = q.length; j < l; j++) {
                 q[j].calc();
             }
         }
-        g.plan = {};
+        g.pl = {};
         planBegin = 1;
         planEnd = -1;
         planRunning = false;
@@ -32,101 +32,100 @@ var Cell = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(v) {
             _super.call(this);
-            this._id = ++seq;
-            this.forwards = [];
-            this.backwards = [];
-            this.level = 0;
-            this.planLevel = -1;
+            this.fw = [];
+            this.bw = [];
+            this.lv = 0;
+            this.pl = -1;
             if (typeof v == 'function') {
-                this._calc = v;
-                this.sta = 0 // 0:not set,1:calc 2:set                
+                this._c = v;
+                this.st = 0 // 0:not set,1:calc 2:set                
             } else {
-                this._val = v;
-                this.sta = 2
+                this._v = v;
+                this.st = 2
             }
         },
         calc: function() {
-            if (this._calc) {
-                if (this.sta == 1) {
+            if (this._c) {
+                if (this.st == 1) {
                     throw new Error('circular');
                 }
-                this.sta = 1;
-                var oldBackwards = this.backwards;
+                this.st = 1;
+                var oldBackwards = this.bw;
                 var newBackwards = [];
-                this.backwards = newBackwards;
-                var savedCell = lastCell;
-                lastCell = this;
-                var val = this._calc();
-                lastCell = savedCell;
+                this.bw = newBackwards;
+                var savedAtom = lastAtom;
+                lastAtom = this;
+                var val = this._c();
+                lastAtom = savedAtom;
                 for (var i = 0, l = oldBackwards.length; i < l; i++) {
                     var b = oldBackwards[i];
                     if (newBackwards.indexOf(b) != -1) {
-                        var fw = b.forwards;
+                        var fw = b.fw;
                         var index = fw.indexOf(this);
                         index > -1 && fw.splice(index, 1);
                     }
                 }
-                this.planLevel = -1;
+                this.pl = -1;
                 this.set(val);
             }
         },
         get: function() {
-            var savedCell = lastCell;
-            if (savedCell) {
-                this.forwards.push(savedCell);
-                savedCell.backwards.push(this);
+            var savedAtom = lastAtom;
+            if (savedAtom) {
+                this.fw.push(savedAtom);
+                savedAtom.bw.push(this);
             }
-            if (this.sta == 0) {
-                this._addToPlan();
+            if (this.st == 0) {
+                this._plan();
             }
-            if (planBegin <= this.level && !planRunning) {
+            if (planBegin <= this.lv && !planRunning) {
                 planRun();
             }
-            if (savedCell) {
-                if (savedCell.level <= this.level) {
-                    savedCell.level = this.level + 1;
+            if (savedAtom) {
+                if (savedAtom.lv <= this.lv) {
+                    savedAtom.lv = this.lv + 1;
                 }
             }
-            return this._val;
+            return this._v;
         },
         set: function(v) {
-            var needUpdate = !(this._val == v);
-            this._val = v;
-            this.sta = 2
+            var needUpdate = !(this._v == v);
+            this._v = v;
+            this.st = 2
             if (needUpdate) {
-                var fw = this.forwards;
+                var fw = this.fw;
                 for (var i = 0, l = fw.length; i < l; i++) {
-                    fw[i]._addToPlan();
+                    fw[i]._plan();
                 }
             }
         },
-        _addToPlan: function() {
-            var level = this.level;
-            var oldLevel = this.planLevel;
-            if (oldLevel == level) return;
-            var plan = g.plan;
-            if (oldLevel > level) {
+        _plan: function() {
+            var lv = this.lv;
+            var oldLevel = this.pl;
+            if (oldLevel == lv) return;
+            var plan = g.pl;
+            if (oldLevel > lv) {
                 var old = plan[oldLevel];
                 if (old) {
                     var index = old.indexOf(this);
                     index > -1 && old.splice(index, 1);
                 }
             }
-            var pLevel = plan[level];
+            var pLevel = plan[lv];
             if (!pLevel) {
                 pLevel = [];
-                plan[level] = pLevel;
+                plan[lv] = pLevel;
             }
             pLevel.push(this);
-            this.planLevel = level;
-            if (level < planBegin) {
-                planBegin = level;
+            this.pl = lv;
+            if (lv < planBegin) {
+                planBegin = lv;
             }
-            if (level > planEnd) {
-                planEnd = level;
+            if (lv > planEnd) {
+                planEnd = lv;
             }
         }
     }
 });
 //------------------------------------------------
-export default Cell;
+export default Atom;
