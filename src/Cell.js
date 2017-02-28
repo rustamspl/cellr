@@ -100,6 +100,7 @@ var Atom = Class(EventEmitter, function(_super) {
                 for (var i = 0, l = fw.length; i < l; i++) {
                     fw[i]._plan();
                 }
+                this.emit('change');
             }
         },
         _plan: function() {
