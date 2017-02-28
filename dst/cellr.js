@@ -51,25 +51,26 @@ var EventEmitter = Class({}, function(_super) {
 //------------------------------------------------
 var Atom = Class(EventEmitter, function(_super) {
     var lastAtom = null,
-        g = {
+        G = {
             pl: {}
         },
         planRunning = false,
-        planBegin = 1,
+        MAX = 0x0fffffff,
+        planBegin = MAX,
         planEnd = -1,
         seq = 0;
     //-------
     function planRun() {
         planRunning = true;
-        var plan = g.pl;
+        var plan = G.pl;
         for (var i = planBegin; i <= planEnd; i++) {
             var q = plan[i];
             for (var j = 0, l = q.length; j < l; j++) {
                 q[j].calc();
             }
         }
-        g.pl = {};
-        planBegin = 1;
+        G.pl = {};
+        planBegin = MAX;
         planEnd = -1;
         planRunning = false;
     }
@@ -91,6 +92,7 @@ var Atom = Class(EventEmitter, function(_super) {
             }
         },
         calc: function() {
+       
             if (this._c) {
                 if (this.st == 1) {
                     throw new Error('circular');
@@ -118,8 +120,9 @@ var Atom = Class(EventEmitter, function(_super) {
         get: function() {
             var savedAtom = lastAtom;
             if (savedAtom) {
-                this.fw.push(savedAtom);
                 savedAtom.bw.push(this);
+                var forward = this.fw;
+                if (forward.indexOf(savedAtom) == -1) forward.push(savedAtom);
             }
             if (this.st == 0) {
                 this._plan();
@@ -149,7 +152,7 @@ var Atom = Class(EventEmitter, function(_super) {
             var lv = this.lv;
             var oldLevel = this.pl;
             if (oldLevel == lv) return;
-            var plan = g.pl;
+            var plan = G.pl;
             if (oldLevel > lv) {
                 var old = plan[oldLevel];
                 if (old) {

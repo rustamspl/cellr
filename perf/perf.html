@@ -87,25 +87,25 @@ $('#btnRunTest').click(function() {
 	runTest($('#bSelectLibrary input:checked').val(), parseInt($('#tfLayerCount').val(), 10));
 });
 
-var cnts={};
-var countFlag=false;
-$('#btnReset').click(function() {
-	for(var i in cnts){	
-		delete cnts[i];
-	}
-	printCnt();
-});
-function incCnt(name){
-	if(countFlag)
-	cnts[name]=(cnts[name]|0)+1;
-}
-function printCnt(){
-	var t=[];
-	for(var i in cnts){	
-		t.push(i+':'+cnts[i]);
-	}
-	$('#txtcnt').text(t.join('\n'));
-}
+// var cnts={};
+// var countFlag=false;
+// $('#btnReset').click(function() {
+// 	for(var i in cnts){	
+// 		delete cnts[i];
+// 	}
+// 	printCnt();
+// });
+// function incCnt(name){
+// 	if(countFlag)
+// 	cnts[name]=(cnts[name]|0)+1;
+// }
+// function printCnt(){
+// 	var t=[];
+// 	for(var i in cnts){	
+// 		t.push(i+':'+cnts[i]);
+// 	}
+// 	$('#txtcnt').text(t.join('\n'));
+// }
 function runTest(lib, layerCount) {
 	$('#btnRunTest')[0].disabled = true;
 
@@ -120,7 +120,7 @@ function runTest(lib, layerCount) {
 			);
 
 			$('#btnRunTest')[0].disabled = false;
-			printCnt();
+			//printCnt();
 		}
 
 		switch (lib) {
@@ -244,7 +244,7 @@ function testCellr(report, layerCount, done) {
 		end.prop3.get(),
 		end.prop4.get()
 	];
-	console.log('point1');
+
 	countFlag=true;
 	var st = performance.now();
 
@@ -262,6 +262,7 @@ function testCellr(report, layerCount, done) {
 	];
 
 	report.recalculationTime = performance.now() - st;
+
 	countFlag=false;
 	done();
 }
