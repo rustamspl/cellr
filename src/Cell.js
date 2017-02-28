@@ -2,17 +2,17 @@ import EventEmitter from './EventEmitter';
 import {
     Class
 } from './JS/Object';
+import nextTick from './Utils/nextTick';
 //------------------------------------------------
-var Atom = Class(EventEmitter, function(_super) {
-    var lastAtom = null,
+var Cell = Class(EventEmitter, function(_super) {
+    var lastCell = null,
         G = {
             pl: {}
         },
         planRunning = false,
         MAX = 0x0fffffff,
         planBegin = MAX,
-        planEnd = -1,
-        seq = 0;
+        planEnd = -1;
     //-------
     function planRun() {
         planRunning = true;
@@ -39,14 +39,14 @@ var Atom = Class(EventEmitter, function(_super) {
             this.pl = -1;
             if (typeof v == 'function') {
                 this._c = v;
-                this.st = 0 // 0:not set,1:calc 2:set                
+                this.st = 0 // 0:not set,1:calc 2:set      
+                this._plan();          
             } else {
                 this._v = v;
                 this.st = 2
             }
         },
         calc: function() {
-       
             if (this._c) {
                 if (this.st == 1) {
                     throw new Error('circular');
@@ -55,10 +55,10 @@ var Atom = Class(EventEmitter, function(_super) {
                 var oldBackwards = this.bw;
                 var newBackwards = [];
                 this.bw = newBackwards;
-                var savedAtom = lastAtom;
-                lastAtom = this;
+                var savedCell = lastCell;
+                lastCell = this;
                 var val = this._c();
-                lastAtom = savedAtom;
+                lastCell = savedCell;
                 for (var i = 0, l = oldBackwards.length; i < l; i++) {
                     var b = oldBackwards[i];
                     if (newBackwards.indexOf(b) != -1) {
@@ -68,15 +68,15 @@ var Atom = Class(EventEmitter, function(_super) {
                     }
                 }
                 this.pl = -1;
-                this.set(val);
+                this._set(val);
             }
         },
         get: function() {
-            var savedAtom = lastAtom;
-            if (savedAtom) {
-                savedAtom.bw.push(this);
+            var savedCell = lastCell;
+            if (savedCell) {
+                savedCell.bw.push(this);
                 var forward = this.fw;
-                if (forward.indexOf(savedAtom) == -1) forward.push(savedAtom);
+                if (forward.indexOf(savedCell) == -1) forward.push(savedCell);
             }
             if (this.st == 0) {
                 this._plan();
@@ -84,14 +84,14 @@ var Atom = Class(EventEmitter, function(_super) {
             if (planBegin <= this.lv && !planRunning) {
                 planRun();
             }
-            if (savedAtom) {
-                if (savedAtom.lv <= this.lv) {
-                    savedAtom.lv = this.lv + 1;
+            if (savedCell) {
+                if (savedCell.lv <= this.lv) {
+                    savedCell.lv = this.lv + 1;
                 }
             }
             return this._v;
         },
-        set: function(v) {
+        _set: function(v) {
             var needUpdate = !(this._v == v);
             this._v = v;
             this.st = 2
@@ -100,8 +100,12 @@ var Atom = Class(EventEmitter, function(_super) {
                 for (var i = 0, l = fw.length; i < l; i++) {
                     fw[i]._plan();
                 }
-                this.emit('change');
+                this.emit('change', v);
             }
+        },
+        set: function(v) {
+            this._set(v);
+             nextTick(planRun);
         },
         _plan: function() {
             var lv = this.lv;
@@ -132,4 +136,4 @@ var Atom = Class(EventEmitter, function(_super) {
     }
 });
 //------------------------------------------------
-export default Atom;
+export default Cell;
