@@ -2,7 +2,6 @@ import EventEmitter from './EventEmitter';
 import {
     Class
 } from './JS/Object';
-
 //------------------------------------------------
 var Cell = Class(EventEmitter, function(_super) {
     var lastCell = null,

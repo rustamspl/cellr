@@ -1,4 +1,4 @@
-import ErrorLogger from '../ErrorLogger';
+
 import global from '../JS/global';
 
 /**
@@ -34,7 +34,7 @@ if (global.process && process.toString() == '[object process]' && process.nextTi
 				try {
 					track[i]();
 				} catch (err) {
-					ErrorLogger.log(err);
+					global.console&&global.console.log&&global.console.log(err);
 				}
 			}
 		}
