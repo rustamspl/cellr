@@ -1,5 +1,6 @@
 'use strict';
 import Cell from './Cell';
+import ObsArray from './ObsArray';
 //-------------------------
 var posAtom = new Cell();
 var edAtom = new Cell();
@@ -46,11 +47,11 @@ document.addEventListener('DOMContentLoaded', function(evt) {
         posAtom.set(evt.x);
     });
     document.addEventListener('mousedown', function(evt) {
-        pressAtom.set('down');
+        pressAtom.set('KU');
         ///div2.innerHTML = 'down';
     });
     document.addEventListener('mouseup', function(evt) {
         //div2.innerHTML = 'up2';
-        pressAtom.set('up');
+        pressAtom.set('UP');
     });
 });

@@ -79,9 +79,6 @@ var EventEmitter = Class({}, function() {
 
 var global = Function('return this;')();
 
-/**
- * @typesign (cb: ());
- */
 var nextTick;
 
 /* istanbul ignore next */
@@ -589,7 +586,33 @@ var Cell = Class(EventEmitter, function(_super) {
     };
 });
 
-//-------------------------
+var ObsArray = Class(EventEmitter, function(_super) {
+    return {
+        _constructor: function(data) {
+            this.data = data || [];
+        },
+        set: function(i, v) {
+            var old = this._data[i];
+            this.data[i] = v;
+            this.emit({
+                type: 'change',
+                method: 'set',
+                index: i,
+                value: v,
+                oldValue: v
+            });
+        },
+        push: function(v) {
+            this.data.push(v);
+            this.emit({
+                type: 'change',
+                method: 'push',
+                value: v
+            });
+        }
+    };
+});
+
 var posAtom = new Cell();
 var edAtom = new Cell();
 var ed2Atom = new Cell();
@@ -635,11 +658,11 @@ document.addEventListener('DOMContentLoaded', function(evt) {
         posAtom.set(evt.x);
     });
     document.addEventListener('mousedown', function(evt) {
-        pressAtom.set('down');
+        pressAtom.set('KU');
         ///div2.innerHTML = 'down';
     });
     document.addEventListener('mouseup', function(evt) {
         //div2.innerHTML = 'up2';
-        pressAtom.set('up');
+        pressAtom.set('UP');
     });
 });
