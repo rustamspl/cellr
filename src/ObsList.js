@@ -6,7 +6,7 @@ var ObsList = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(data) {
             _super.apply(this);
-            this.data = data || [];
+            this.change(data || []);
         },
         change: function(v) {
             var old = this.data;
@@ -27,7 +27,7 @@ var ObsList = Class(EventEmitter, function(_super) {
                 method: 'set',
                 index: i,
                 value: v,
-                oldValue: v,
+                oldValue: old,
                 oldLength: oldLength
             })
         },

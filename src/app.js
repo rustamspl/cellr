@@ -1,6 +1,7 @@
 'use strict';
 import Cell from './Cell';
 import ObsList from './ObsList';
+import ObsMap from './ObsMap';
 import Node from './Node';
 import {
     createElement,
@@ -26,8 +27,12 @@ import {
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
+
+    var attrs=new ObsMap();
+
     var view = new Node({
-        data: pos
+        data: pos,
+        attrs:attrs
     });
     bodyAppend(view.el);
     var a = new ObsList();
@@ -55,16 +60,25 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     btnRemove1.innerHTML = 'btnZZZ';
     bodyAppend(btnRemove1);
     btnRemove1.onclick = function() {
-        a.change([456,678,446]);
+        a.change([456, 678, 446]);
     };
     //-----
     var view2 = new Node({
-        data: a
+        data: a,
+        factory: function(val) {
+            return new Node({
+                tag: 'input',
+                attrs: {
+                    value: val
+                }
+            });
+        }
     });
     bodyAppend(view2.el);
     addEventListener.call(document, 'mousemove', function(evt) {
         //div.innerHTML = evt.x + ':' + evt.y;
         pos.set(evt.x);
+        attrs.set('class','cl'+evt.y);
     });
     // 
     // 

@@ -618,7 +618,7 @@ var ObsList = Class$1(EventEmitter, function(_super) {
     return {
         _constructor: function(data) {
             _super.apply(this);
-            this.data = data || [];
+            this.change(data || []);
         },
         change: function(v) {
             var old = this.data;
@@ -639,7 +639,7 @@ var ObsList = Class$1(EventEmitter, function(_super) {
                 method: 'set',
                 index: i,
                 value: v,
-                oldValue: v,
+                oldValue: old,
                 oldLength: oldLength
             });
         },
@@ -671,77 +671,187 @@ var ObsList = Class$1(EventEmitter, function(_super) {
     };
 });
 
+var ObsMap = Class$1(EventEmitter, function(_super) {
+    return {
+        _constructor: function(data) {
+            _super.apply(this);
+            this.change(data || {});
+        },
+        change: function(v) {
+            var old = this.data;
+            this.data = v;
+            this.emit({
+                type: 'change',
+                method: 'change',
+                value: v,
+                oldValue: old
+            });
+        },
+        set: function(k, v) {
+            var old = this.data[k];
+            this.data[k] = v;
+            this.emit({
+                type: 'change',
+                method: 'set',
+                key: k,
+                value: v,
+                oldValue: old
+            });
+        },
+        remove: function(k) {
+            var old = this.data[k];
+            delete this.data[k];
+            if (old.length) {
+                this.emit({
+                    type: 'change',
+                    method: 'remove',
+                    key: k,
+                    oldValue: old[0]
+                });
+            }
+        }
+    };
+});
+
 var document = global.document;
 var createElement = document.createElement.bind(document);
 var appendChild = document.appendChild;
 var addEventListener = document.addEventListener;
 
-function defaultFactory(data) {
+function _defaultFactory(data) {
     return new Node({
         data: data
     })
+}
+
+function _handleCellData(evt) {
+    this.el.innerHTML = evt.value;
+}
+
+function _handleObsListData(evt) {
+    var el = this.el;
+    switch (evt.method) {
+        case 'change':
+            for (var i = 0, l = evt.oldValue.length; i < l; i++) {
+                el.removeChild(el.firstChild);
+            }
+            var val = evt.value;
+            for (var i = 0, l = val.length; i < l; i++) {
+                var newNode = this._factory(val[i]);
+                el.appendChild(newNode.el);
+            }
+            return;
+        case 'set':
+            var newNode = this._factory(evt.value);
+            if (evt.oldLength == 0) {
+                el.appendChild(newNode.el);
+            } else {
+                el.replaceChild(newNode.el, el.childNodes[evt.index]);
+            }
+            return;
+        case 'insert':
+            var newNode = this._factory(evt.value);
+            if (evt.oldLength <= evt.index) {
+                el.appendChild(newNode.el);
+            } else {
+                el.insertBefore(newNode.el, el.childNodes[evt.index]);
+            }
+            return;
+        case 'remove':
+            el.removeChild(el.childNodes[evt.index]);
+            return;
+    }
+}
+
+function _handleObsMapAttrs(evt) {
+    var el = this.el;
+    switch (evt.method) {
+        case 'change':
+            var oldValue = evt.oldValue;
+            for (var k in oldValue) {
+                el.removeAttribute(k);
+            }
+            var attrs = evt.value;
+            for (var k in attrs) {
+                this._setAttr(k, attrs[k]);
+            }
+            return;
+        case 'set':
+            this._setAttr(evt.key, evt.value);
+            return;
+        case 'remove':
+            this.el.removeAttribute(evt.key);
+            return;
+    }
 }
 var Node = Class$1({}, function(_super) {
     return {
         _constructor: function(opts) {
             var opts = opts || {};
             var el = this.el = createElement(opts.tag || 'div');
-            var data = opts.data || '';
+            var data = opts.data;
             if (data instanceof ObsList) {
-                this._factory = opts.factory || defaultFactory;
-                data.on('change', this._handleObsList, this);
+                this._factory = opts.factory || _defaultFactory;
+                data.on('change', _handleObsListData, this);
             } else if (data instanceof Cell) {
-                data.on('change', this._handleCell, this);
+                data.on('change', _handleCellData, this);
                 el.innerHTML = data.get();
-            } else {
+            } else if (data) {
                 el.innerHTML = data;
             }
-        },
-        _handleCell: function(evt) {
-            this.el.innerHTML = evt.value;
-        },
-        _handleObsList: function(evt) {
-            var el = this.el;
-            switch (evt.method) {
-                case 'change':
-                    for (var i = 0, l = evt.oldValue.length; i < l; i++) {
-                        el.removeChild(el.firstChild);
-                    }
-                    var val = evt.value;
-                    for (var i = 0, l = val.length; i < l; i++) {
-                        var newNode = this._factory(val[i]);
-                        el.appendChild(newNode.el);
-                    }
-                    return;
-                case 'set':
-                    var newNode = this._factory(evt.value);
-                    if (evt.oldLength == 0) {
-                        el.appendChild(newNode.el);
-                    } else {
-                        el.replaceChild(newNode.el, el.childNodes[evt.index]);
-                    }
-                    return;
-                case 'insert':
-                    var newNode = this._factory(evt.value);
-                    if (evt.oldLength <= evt.index) {
-                        el.appendChild(newNode.el);
-                    } else {
-                        el.insertBefore(newNode.el, el.childNodes[evt.index]);
-                    }
-                    return;
-                case 'remove':
-                    el.removeChild(el.childNodes[evt.index]);
-                    return;
+            var attrs = opts.attrs || {};
+            if (attrs instanceof ObsMap) {
+                attrs.on('change', _handleObsMapAttrs, this);
+            } else {
+                for (var k in attrs) {
+                    this._setAttr(k, attrs[k]);
+                }
             }
+        },
+        _setAttr: function(k, v) {
+            if (v instanceof Cell) {
+                v.on('change', function(evt) {
+                    this._setAttrVal(k, evt.value);
+                }, this);
+                this._setAttrVal(k, v.get());
+            } else {
+                this._setAttrVal(k, v);
+            }
+        },
+        _setAttrVal: function(k, v) {
+            if (!v) {
+                this.el.removeAttribute(k);
+                return;
+            }
+            this.el.setAttribute(k, v);
         }
     };
 });
 
+//-------------------------
+// var ed = new Cell();
+// var ed2 = new Cell();
+// var press = new Cell();
+// var txt = new Cell(function() {
+//     return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
+// });
+// var txt2 = new Cell(function() {
+//     return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
+// });
+// var txt3 = new Cell(function() {
+//     return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
+// });
+//-------------------------
+//-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
+
+    var attrs=new ObsMap();
+
     var view = new Node({
-        data: pos
+        data: pos,
+        attrs:attrs
     });
     bodyAppend(view.el);
     var a = new ObsList();
@@ -769,16 +879,25 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     btnRemove1.innerHTML = 'btnZZZ';
     bodyAppend(btnRemove1);
     btnRemove1.onclick = function() {
-        a.change([456,678,446]);
+        a.change([456, 678, 446]);
     };
     //-----
     var view2 = new Node({
-        data: a
+        data: a,
+        factory: function(val) {
+            return new Node({
+                tag: 'input',
+                attrs: {
+                    value: val
+                }
+            });
+        }
     });
     bodyAppend(view2.el);
     addEventListener.call(document, 'mousemove', function(evt) {
         //div.innerHTML = evt.x + ':' + evt.y;
         pos.set(evt.x);
+        attrs.set('class','cl'+evt.y);
     });
     // 
     // 
