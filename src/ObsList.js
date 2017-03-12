@@ -1,31 +1,45 @@
 import EventEmitter from './EventEmitter';
 import {
-    is,
     Class
 } from './JS/Object';
-var ObsArray = Class(EventEmitter, function(_super) {
+var ObsList = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(data) {
             _super.apply(this);
             this.data = data || [];
         },
+        change: function(v) {
+            var old = this.data;
+            this.data = v;
+            this.emit({
+                type: 'change',
+                method: 'change',
+                value: v,
+                oldValue: old
+            })
+        },
         set: function(i, v) {
-            var old = this._data[i];
+            var old = this.data[i];
+            var oldLength = this.data.length;
             this.data[i] = v;
             this.emit({
                 type: 'change',
                 method: 'set',
                 index: i,
                 value: v,
-                oldValue: v
+                oldValue: v,
+                oldLength: oldLength
             })
         },
-        push: function(v) {
-            this.data.push(v)
+        insert: function(i, v) {
+            var oldLength = this.data.length;
+            this.data.splice(i, 0, v)
             this.emit({
                 type: 'change',
-                method: 'push',
-                value: v
+                method: 'insert',
+                index: i,
+                value: v,
+                oldLength: oldLength
             })
         },
         remove: function(i) {
@@ -38,7 +52,10 @@ var ObsArray = Class(EventEmitter, function(_super) {
                     oldValue: old[0]
                 })
             }
+        },
+        push: function(v) {
+            this.insert(this.data.length, v);
         }
     };
 });
-export default ObsArray;
+export default ObsList;

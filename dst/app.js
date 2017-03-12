@@ -614,29 +614,44 @@ function Class$1(_super, _factory) {
 }
 //-------------
 
-var ObsArray = Class$1(EventEmitter, function(_super) {
+var ObsList = Class$1(EventEmitter, function(_super) {
     return {
         _constructor: function(data) {
             _super.apply(this);
             this.data = data || [];
         },
+        change: function(v) {
+            var old = this.data;
+            this.data = v;
+            this.emit({
+                type: 'change',
+                method: 'change',
+                value: v,
+                oldValue: old
+            });
+        },
         set: function(i, v) {
-            var old = this._data[i];
+            var old = this.data[i];
+            var oldLength = this.data.length;
             this.data[i] = v;
             this.emit({
                 type: 'change',
                 method: 'set',
                 index: i,
                 value: v,
-                oldValue: v
+                oldValue: v,
+                oldLength: oldLength
             });
         },
-        push: function(v) {
-            this.data.push(v);
+        insert: function(i, v) {
+            var oldLength = this.data.length;
+            this.data.splice(i, 0, v);
             this.emit({
                 type: 'change',
-                method: 'push',
-                value: v
+                method: 'insert',
+                index: i,
+                value: v,
+                oldLength: oldLength
             });
         },
         remove: function(i) {
@@ -649,6 +664,9 @@ var ObsArray = Class$1(EventEmitter, function(_super) {
                     oldValue: old[0]
                 });
             }
+        },
+        push: function(v) {
+            this.insert(this.data.length, v);
         }
     };
 });
@@ -658,34 +676,62 @@ var createElement = document.createElement.bind(document);
 var appendChild = document.appendChild;
 var addEventListener = document.addEventListener;
 
-var View = Class$1({}, function(_super) {
+function defaultFactory(data) {
+    return new Node({
+        data: data
+    })
+}
+var Node = Class$1({}, function(_super) {
     return {
         _constructor: function(opts) {
             var opts = opts || {};
             var el = this.el = createElement(opts.tag || 'div');
-            var value = opts.val || '';
-            var view = this;
-            if (value instanceof ObsArray) {
-                value.on('change', function(evt) {
-                    switch (evt.method) {
-                        case 'push':
-                            var newView = new View({
-                                val: evt.value
-                            });
-                            el.appendChild(newView.el);
-                            return;
-                        case 'remove':
-                            el.removeChild(el.childNodes[evt.index]);
-                            return;
-                    }
-                });
-            } else if (value instanceof Cell) {
-                value.on('change', function(evt) {
-                    el.innerHTML = evt.value;
-                });
-                el.innerHTML = value.get();
+            var data = opts.data || '';
+            if (data instanceof ObsList) {
+                this._factory = opts.factory || defaultFactory;
+                data.on('change', this._handleObsList, this);
+            } else if (data instanceof Cell) {
+                data.on('change', this._handleCell, this);
+                el.innerHTML = data.get();
             } else {
-                el.innerHTML = value;
+                el.innerHTML = data;
+            }
+        },
+        _handleCell: function(evt) {
+            this.el.innerHTML = evt.value;
+        },
+        _handleObsList: function(evt) {
+            var el = this.el;
+            switch (evt.method) {
+                case 'change':
+                    for (var i = 0, l = evt.oldValue.length; i < l; i++) {
+                        el.removeChild(el.firstChild);
+                    }
+                    var val = evt.value;
+                    for (var i = 0, l = val.length; i < l; i++) {
+                        var newNode = this._factory(val[i]);
+                        el.appendChild(newNode.el);
+                    }
+                    return;
+                case 'set':
+                    var newNode = this._factory(evt.value);
+                    if (evt.oldLength == 0) {
+                        el.appendChild(newNode.el);
+                    } else {
+                        el.replaceChild(newNode.el, el.childNodes[evt.index]);
+                    }
+                    return;
+                case 'insert':
+                    var newNode = this._factory(evt.value);
+                    if (evt.oldLength <= evt.index) {
+                        el.appendChild(newNode.el);
+                    } else {
+                        el.insertBefore(newNode.el, el.childNodes[evt.index]);
+                    }
+                    return;
+                case 'remove':
+                    el.removeChild(el.childNodes[evt.index]);
+                    return;
             }
         }
     };
@@ -694,11 +740,11 @@ var View = Class$1({}, function(_super) {
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
-    var view = new View({
-        val: pos
+    var view = new Node({
+        data: pos
     });
     bodyAppend(view.el);
-    var a = new ObsArray();
+    var a = new ObsList();
     //------
     var btnAdd = createElement('button');
     btnAdd.innerHTML = 'btnAdd';
@@ -718,8 +764,16 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
         a.remove(0);
     };
     //-----
-    var view2 = new View({
-        val: a
+    //------
+    var btnRemove1 = createElement('button');
+    btnRemove1.innerHTML = 'btnZZZ';
+    bodyAppend(btnRemove1);
+    btnRemove1.onclick = function() {
+        a.change([456,678,446]);
+    };
+    //-----
+    var view2 = new Node({
+        data: a
     });
     bodyAppend(view2.el);
     addEventListener.call(document, 'mousemove', function(evt) {
