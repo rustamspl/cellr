@@ -6,6 +6,7 @@ import {
 var ObsArray = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(data) {
+            _super.apply(this);
             this.data = data || [];
         },
         set: function(i, v) {
@@ -26,6 +27,17 @@ var ObsArray = Class(EventEmitter, function(_super) {
                 method: 'push',
                 value: v
             })
+        },
+        remove: function(i) {
+            var old = this.data.splice(i, 1);
+            if (old.length) {
+                this.emit({
+                    type: 'change',
+                    method: 'remove',
+                    index: i,
+                    oldValue: old[0]
+                })
+            }
         }
     };
 });
