@@ -7,10 +7,13 @@
     "rollup": "^0.41.4",
     "uglifyjs": "^2.4.10"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "rollup-watch": "^3.2.2"
+  },
   "scripts": {
     "build": "rollup -c  ",
     "m": "rollup -c && uglifyjs dst/cellr.js -c -m > dst/cellr.min.js ",
+    "w": "rollup -c -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
