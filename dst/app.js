@@ -89,6 +89,9 @@ var EventEmitter = Class({}, function() {
 
 var global = Function('return this;')();
 
+/**
+ * @typesign (cb: ());
+ */
 var nextTick;
 /* istanbul ignore next */
 if (global.process && process.toString() == '[object process]' && process.nextTick) {
@@ -758,10 +761,10 @@ function _handleObsMapAttrs(evt) {
             var oldValue = evt.oldValue;
             var attrs = evt.value;
             for (var k in oldValue) {
-                if(!(k in value)){
+                if (!(k in value)) {
                     this._setAttr(k);
-                }                
-            }           
+                }
+            }
             for (var k in attrs) {
                 this._setAttr(k, attrs[k]);
             }
@@ -806,6 +809,10 @@ var Node = Class$1({}, function(_super) {
             }
         },
         _setAttrVal: function(k, v) {
+            if (k == 'value') {
+                this.el.value = v;
+                return;
+            }
             if (!v) {
                 this.el.removeAttribute(k);
                 return;
@@ -815,6 +822,21 @@ var Node = Class$1({}, function(_super) {
     };
 });
 
+//-------------------------
+// var ed = new Cell();
+// var ed2 = new Cell();
+// var press = new Cell();
+// var txt = new Cell(function() {
+//     return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
+// });
+// var txt2 = new Cell(function() {
+//     return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
+// });
+// var txt3 = new Cell(function() {
+//     return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
+// });
+//-------------------------
+//-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();

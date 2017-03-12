@@ -64,10 +64,10 @@ function _handleObsMapAttrs(evt) {
             var oldValue = evt.oldValue;
             var attrs = evt.value;
             for (var k in oldValue) {
-                if(!(k in value)){
+                if (!(k in value)) {
                     this._setAttr(k);
-                }                
-            }           
+                }
+            }
             for (var k in attrs) {
                 this._setAttr(k, attrs[k]);
             }
@@ -112,6 +112,10 @@ var Node = Class({}, function(_super) {
             }
         },
         _setAttrVal: function(k, v) {
+            if (k == 'value') {
+                this.el.value = v;
+                return;
+            }
             if (!v) {
                 this.el.removeAttribute(k);
                 return;
