@@ -1,12 +1,12 @@
 //import eslint from 'rollup-plugin-eslint';
 
 export default {
-	entry: 'src/cellr.js',
+	entry: 'src/app.js',
 
-	format: 'umd',
-	moduleName: 'cellr',
+	format: 'cjs',
+	moduleName: 'app',
 
-	dest: 'dst/cellr.js',
+	dest: 'dst/app.js',
 
 	plugins: [
 		//eslint()
