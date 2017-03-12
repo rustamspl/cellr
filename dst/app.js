@@ -586,7 +586,27 @@ var Cell = Class(EventEmitter, function(_super) {
     };
 });
 
-var ObsArray = Class(EventEmitter, function(_super) {
+//-------------
+
+//-------------
+
+//-------------
+function extend$1(dst, src) {
+    for (var i in src)
+        if (src.hasOwnProperty(i)) dst[i] = src[i];
+    return dst;
+}
+//-------------
+function Class$1(_super, _factory) {
+    var _proto = _factory(_super);
+    var _constructor = _proto._constructor;
+    delete _proto._constructor;
+    _constructor.prototype = _super.prototype ? extend$1(Object.create(_super.prototype), _proto) : _proto;
+    return _constructor;
+}
+//-------------
+
+var ObsArray = Class$1(EventEmitter, function(_super) {
     return {
         _constructor: function(data) {
             this.data = data || [];
@@ -613,6 +633,7 @@ var ObsArray = Class(EventEmitter, function(_super) {
     };
 });
 
+//-------------------------
 var posAtom = new Cell();
 var edAtom = new Cell();
 var ed2Atom = new Cell();
@@ -663,6 +684,6 @@ document.addEventListener('DOMContentLoaded', function(evt) {
     });
     document.addEventListener('mouseup', function(evt) {
         //div2.innerHTML = 'up2';
-        pressAtom.set('UP');
+        pressAtom.set('UPpp');
     });
 });

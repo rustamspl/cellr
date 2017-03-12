@@ -3,8 +3,8 @@ import EventEmitter from './EventEmitter';
 import {
     is,
     Class
-} from './JS/Object';
-import nextTick from './Utils/nextTick';
+} from './js/Object';
+import nextTick from './utils/nextTick';
 
 function noop() {}
 var EventEmitterProto = EventEmitter.prototype;

@@ -1,5 +1,5 @@
 
-import global from '../JS/global';
+import global from '../js/global';
 
 /**
  * @typesign (cb: ());

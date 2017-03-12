@@ -1,6 +1,6 @@
 import {
     Class
-} from './JS/Object';
+} from './js/Object';
 var EventEmitter = Class({}, function() {
     return {
         _constructor: function() {

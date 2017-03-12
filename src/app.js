@@ -52,6 +52,6 @@ document.addEventListener('DOMContentLoaded', function(evt) {
     });
     document.addEventListener('mouseup', function(evt) {
         //div2.innerHTML = 'up2';
-        pressAtom.set('UP');
+        pressAtom.set('UPpp');
     });
 });
