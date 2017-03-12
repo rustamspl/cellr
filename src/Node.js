@@ -62,19 +62,18 @@ function _handleObsMapAttrs(evt) {
     switch (evt.method) {
         case 'change':
             var oldValue = evt.oldValue;
-            for (var k in oldValue) {
-                el.removeAttribute(k);
-            }
             var attrs = evt.value;
+            for (var k in oldValue) {
+                if(!(k in value)){
+                    this._setAttr(k);
+                }                
+            }           
             for (var k in attrs) {
                 this._setAttr(k, attrs[k]);
             }
             return;
         case 'set':
             this._setAttr(evt.key, evt.value);
-            return;
-        case 'remove':
-            this.el.removeAttribute(evt.key);
             return;
     }
 }

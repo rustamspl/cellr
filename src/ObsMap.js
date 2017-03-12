@@ -28,18 +28,6 @@ var ObsMap = Class(EventEmitter, function(_super) {
                 value: v,
                 oldValue: old
             })
-        },
-        remove: function(k) {
-            var old = this.data[k];
-            delete this.data[k];
-            if (old.length) {
-                this.emit({
-                    type: 'change',
-                    method: 'remove',
-                    key: k,
-                    oldValue: old[0]
-                })
-            }
         }
     };
 });

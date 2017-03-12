@@ -697,18 +697,6 @@ var ObsMap = Class$1(EventEmitter, function(_super) {
                 value: v,
                 oldValue: old
             });
-        },
-        remove: function(k) {
-            var old = this.data[k];
-            delete this.data[k];
-            if (old.length) {
-                this.emit({
-                    type: 'change',
-                    method: 'remove',
-                    key: k,
-                    oldValue: old[0]
-                });
-            }
         }
     };
 });
@@ -768,19 +756,18 @@ function _handleObsMapAttrs(evt) {
     switch (evt.method) {
         case 'change':
             var oldValue = evt.oldValue;
-            for (var k in oldValue) {
-                el.removeAttribute(k);
-            }
             var attrs = evt.value;
+            for (var k in oldValue) {
+                if(!(k in value)){
+                    this._setAttr(k);
+                }                
+            }           
             for (var k in attrs) {
                 this._setAttr(k, attrs[k]);
             }
             return;
         case 'set':
             this._setAttr(evt.key, evt.value);
-            return;
-        case 'remove':
-            this.el.removeAttribute(evt.key);
             return;
     }
 }
@@ -828,21 +815,6 @@ var Node = Class$1({}, function(_super) {
     };
 });
 
-//-------------------------
-// var ed = new Cell();
-// var ed2 = new Cell();
-// var press = new Cell();
-// var txt = new Cell(function() {
-//     return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
-// });
-// var txt2 = new Cell(function() {
-//     return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
-// });
-// var txt3 = new Cell(function() {
-//     return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
-// });
-//-------------------------
-//-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
