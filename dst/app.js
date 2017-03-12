@@ -1,8 +1,5 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(factory());
-}(this, (function () { 'use strict';
+(function () {
+'use strict';
 
 var ErrorLogger = {
     log: function log() {}
@@ -24,8 +21,11 @@ var is = Object.is || function is(a, b) {
 
 //-------------
 function extend(dst, src) {
-    for (var i in src)
-        if (src.hasOwnProperty(i)) dst[i] = src[i];
+    for (var i in src) {
+        if (src.hasOwnProperty(i)) {
+            dst[i] = src[i];
+        }
+    }
     return dst;
 }
 //-------------
@@ -50,9 +50,13 @@ var EventEmitter = Class({}, function() {
                 };
             }
             var handlers = this._cbs[evt.type];
-            if (!handlers) return;
+            if (!handlers) {
+                return;
+            }
             var callbacks = handlers.cbs;
-            if (!callbacks.length) return;
+            if (!callbacks.length) {
+                return;
+            }
             var ctx = handlers.ctx;
             for (var i = 0, l = callbacks.length; i < l; i++) {
                 callbacks[i].call(ctx[i], evt);
@@ -69,7 +73,9 @@ var EventEmitter = Class({}, function() {
         },
         off: function(evt, cb, ctx) {
             var handlers = this._cbs[evt];
-            if (!handlers) return;
+            if (!handlers) {
+                return;
+            }
             var cbs = handlers.cbs;
             var ctxs = handlers.ctx;
             var ind = cbs.indexOf(cb);
@@ -87,57 +93,50 @@ var global = Function('return this;')();
  * @typesign (cb: ());
  */
 var nextTick;
-
 /* istanbul ignore next */
 if (global.process && process.toString() == '[object process]' && process.nextTick) {
-	nextTick = process.nextTick;
+    nextTick = process.nextTick;
 } else if (global.setImmediate) {
-	nextTick = function nextTick(cb) {
-		setImmediate(cb);
-	};
+    nextTick = function nextTick(cb) {
+        setImmediate(cb);
+    };
 } else if (global.Promise && Promise.toString().indexOf('[native code]') != -1) {
-	var prm = Promise.resolve();
-
-	nextTick = function nextTick(cb) {
-		prm.then(function() {
-			cb();
-		});
-	};
+    var prm = Promise.resolve();
+    nextTick = function nextTick(cb) {
+        prm.then(function() {
+            cb();
+        });
+    };
 } else {
-	var queue;
-
-	global.addEventListener('message', function() {
-		if (queue) {
-			var track = queue;
-
-			queue = null;
-
-			for (var i = 0, l = track.length; i < l; i++) {
-				try {
-					track[i]();
-				} catch (err) {
-					global.console&&global.console.log&&global.console.log(err);
-				}
-			}
-		}
-	});
-
-	nextTick = function nextTick(cb) {
-		if (queue) {
-			queue.push(cb);
-		} else {
-			queue = [cb];
-			postMessage('__tic__', '*');
-		}
-	};
+    var queue;
+    global.addEventListener('message', function() {
+        if (queue) {
+            var track = queue;
+            queue = null;
+            for (var i = 0, l = track.length; i < l; i++) {
+                try {
+                    track[i]();
+                } catch (err) {
+                    global.console && global.console.log && global.console.log(err);
+                }
+            }
+        }
+    });
+    nextTick = function nextTick(cb) {
+        if (queue) {
+            queue.push(cb);
+        } else {
+            queue = [cb];
+            postMessage('__tic__', '*');
+        }
+    };
 }
-
 var nextTick$1 = nextTick;
 
 var EventEmitterProto = EventEmitter.prototype;
-var evt_on = EventEmitterProto.on;
-var evt_off = EventEmitterProto.off;
-var evt_emit = EventEmitterProto.emit;
+var evtOn = EventEmitterProto.on;
+var evtOff = EventEmitterProto.off;
+var evtEmit = EventEmitterProto.emit;
 var MAX = Number.MAX_SAFE_INTEGER || 0x1fffffffffffff;
 //var errorIndexCounter = 0;
 var pushingIndexCounter = 0;
@@ -199,7 +198,7 @@ function rel() {
             var oldRelPlIndex = relPlIndex;
             cell._fixedValue = cell._val;
             cell._chEvt = null;
-            evt_emit.call(cell, chEvt);
+            evtEmit.call(cell, chEvt);
             var pushingIndex = cell._pushInd;
             var slaves = cell._fws;
             for (var i = 0, l = slaves.length; i < l; i++) {
@@ -241,7 +240,9 @@ var Cell = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(value, opts) {
             _super.call(this);
-            if (!opts) opts = {};
+            if (!opts) {
+                opts = {};
+            }
   
             this.owner = opts.owner || this;
             this._clc = typeof value == 'function' ? value : null;
@@ -278,7 +279,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 rel();
             }
             this._act();
-            evt_on.call(this, type, listener, arguments.length >= 3 ? context : this.owner);
+            evtOn.call(this, type, listener, arguments.length >= 3 ? context : this.owner);
             this._hasFols = true;
             return this;
         },
@@ -286,8 +287,8 @@ var Cell = Class(EventEmitter, function(_super) {
             if (relPlned) {
                 rel();
             }
-            evt_off.apply(this, arguments);
-            if (!this._fws.length && !this._cbs['change'] && !this._cbs['error'] && this._hasFols) {
+            evtOff.apply(this, arguments);
+            if (!this._fws.length && !this._cbs.change && !this._cbs.error && this._hasFols) {
                 this._hasFols = false;
                 this._deact();
             }
@@ -300,7 +301,7 @@ var Cell = Class(EventEmitter, function(_super) {
         },
         _unregSl: function _unregSl(slave) {
             this._fws.splice(this._fws.indexOf(slave), 1);
-            if (!this._fws.length && !this._cbs['change'] && !this._cbs['error']) {
+            if (!this._fws.length && !this._cbs.change && !this._cbs.error) {
                 this._hasFols = false;
                 this._deact();
             }
@@ -584,58 +585,11 @@ var Cell = Class(EventEmitter, function(_super) {
                 return;
             }
             this._lastErrEvt = evt;
-            evt_emit.call(this, evt);
+            evtEmit.call(this, evt);
             var slaves = this._fws;
             for (var i = 0, l = slaves.length; i < l; i++) {
                 slaves[i]._hErrEvt(evt);
             }
-        },
-    };
-});
-
-//-------------
-
-//-------------
-
-//-------------
-function extend$1(dst, src) {
-    for (var i in src)
-        if (src.hasOwnProperty(i)) dst[i] = src[i];
-    return dst;
-}
-//-------------
-function Class$1(_super, _factory) {
-    var _proto = _factory(_super);
-    var _constructor = _proto._constructor;
-    delete _proto._constructor;
-    _constructor.prototype = _super.prototype ? extend$1(Object.create(_super.prototype), _proto) : _proto;
-    return _constructor;
-}
-//-------------
-
-var ObsArray = Class$1(EventEmitter, function(_super) {
-    return {
-        _constructor: function(data) {
-            this.data = data || [];
-        },
-        set: function(i, v) {
-            var old = this._data[i];
-            this.data[i] = v;
-            this.emit({
-                type: 'change',
-                method: 'set',
-                index: i,
-                value: v,
-                oldValue: v
-            });
-        },
-        push: function(v) {
-            this.data.push(v);
-            this.emit({
-                type: 'change',
-                method: 'push',
-                value: v
-            });
         }
     };
 });
@@ -645,6 +599,7 @@ var createElement = document.createElement.bind(document);
 var appendChild = document.appendChild;
 var addEventListener = document.addEventListener;
 
+//import ObsArray from './ObsArray';
 //-------------------------
 var pos = new Cell();
 var ed = new Cell();
@@ -671,7 +626,7 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     bodyAppend(div3);
     var div4 = createElement('div');
     bodyAppend(div4);
-    div4.className = "zzzz";
+    div4.className = 'zzzz';
     var ted = createElement('input');
     bodyAppend.call(div4, ted);
     ted.onkeyup = function() {
@@ -705,4 +660,4 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     });
 });
 
-})));
+}());

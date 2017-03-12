@@ -3,7 +3,7 @@
 export default {
 	entry: 'src/app.js',
 
-	format: 'umd',
+	format: 'iife',
 	moduleName: 'app',
 
 	dest: 'dst/app.js',

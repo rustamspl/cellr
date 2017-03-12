@@ -6,11 +6,11 @@ import {
 } from './js/Object';
 import nextTick from './utils/nextTick';
 
-function noop() {}
+
 var EventEmitterProto = EventEmitter.prototype;
-var evt_on = EventEmitterProto.on;
-var evt_off = EventEmitterProto.off;
-var evt_emit = EventEmitterProto.emit;
+var evtOn = EventEmitterProto.on;
+var evtOff = EventEmitterProto.off;
+var evtEmit = EventEmitterProto.emit;
 var MAX = Number.MAX_SAFE_INTEGER || 0x1fffffffffffff;
 //var errorIndexCounter = 0;
 var pushingIndexCounter = 0;
@@ -72,7 +72,7 @@ function rel() {
             var oldRelPlIndex = relPlIndex;
             cell._fixedValue = cell._val;
             cell._chEvt = null;
-            evt_emit.call(cell, chEvt);
+            evtEmit.call(cell, chEvt);
             var pushingIndex = cell._pushInd;
             var slaves = cell._fws;
             for (var i = 0, l = slaves.length; i < l; i++) {
@@ -114,7 +114,9 @@ var Cell = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(value, opts) {
             _super.call(this);
-            if (!opts) opts = {};
+            if (!opts) {
+                opts = {};
+            }
   
             this.owner = opts.owner || this;
             this._clc = typeof value == 'function' ? value : null;
@@ -151,7 +153,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 rel();
             }
             this._act();
-            evt_on.call(this, type, listener, arguments.length >= 3 ? context : this.owner);
+            evtOn.call(this, type, listener, arguments.length >= 3 ? context : this.owner);
             this._hasFols = true;
             return this;
         },
@@ -159,8 +161,8 @@ var Cell = Class(EventEmitter, function(_super) {
             if (relPlned) {
                 rel();
             }
-            evt_off.apply(this, arguments);
-            if (!this._fws.length && !this._cbs['change'] && !this._cbs['error'] && this._hasFols) {
+            evtOff.apply(this, arguments);
+            if (!this._fws.length && !this._cbs.change && !this._cbs.error && this._hasFols) {
                 this._hasFols = false;
                 this._deact();
             }
@@ -173,7 +175,7 @@ var Cell = Class(EventEmitter, function(_super) {
         },
         _unregSl: function _unregSl(slave) {
             this._fws.splice(this._fws.indexOf(slave), 1);
-            if (!this._fws.length && !this._cbs['change'] && !this._cbs['error']) {
+            if (!this._fws.length && !this._cbs.change && !this._cbs.error) {
                 this._hasFols = false;
                 this._deact();
             }
@@ -364,7 +366,7 @@ var Cell = Class(EventEmitter, function(_super) {
             if (this._validate) {
                 this._validate(value, oldValue);
             }
-            this.push(value)
+            this.push(value);
             return this;
         },
         push: function push(value) {
@@ -457,12 +459,12 @@ var Cell = Class(EventEmitter, function(_super) {
                 return;
             }
             this._lastErrEvt = evt;
-            evt_emit.call(this, evt);
+            evtEmit.call(this, evt);
             var slaves = this._fws;
             for (var i = 0, l = slaves.length; i < l; i++) {
                 slaves[i]._hErrEvt(evt);
             }
-        },
+        }
     };
 });
 export default Cell;

@@ -1,6 +1,6 @@
 'use strict';
 import Cell from './Cell';
-import ObsArray from './ObsArray';
+//import ObsArray from './ObsArray';
 import {
     createElement,
     appendChild,
@@ -33,7 +33,7 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     bodyAppend(div3);
     var div4 = createElement('div');
     bodyAppend(div4);
-    div4.className = "zzzz";
+    div4.className = 'zzzz';
     var ted = createElement('input');
     bodyAppend.call(div4, ted);
     ted.onkeyup = function() {

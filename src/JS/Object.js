@@ -9,8 +9,11 @@ export var is = Object.is || function is(a, b) {
 export var hasOwn = Object.prototype.hasOwnProperty;
 //-------------
 export function extend(dst, src) {
-    for (var i in src)
-        if (src.hasOwnProperty(i)) dst[i] = src[i];
+    for (var i in src) {
+        if (src.hasOwnProperty(i)) {
+            dst[i] = src[i];
+        }
+    }
     return dst;
 }
 //-------------

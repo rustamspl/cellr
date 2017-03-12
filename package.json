@@ -8,6 +8,8 @@
     "uglifyjs": "^2.4.10"
   },
   "devDependencies": {
+    "babel-eslint": "^7.1.1",
+    "rollup-plugin-eslint": "^3.0.0",
     "rollup-watch": "^3.2.2"
   },
   "scripts": {
