@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "rollup -c  ",
-    "m": "rollup -c && uglifyjs dst/app.js -c -m > dst/app.min.js ",
+    "m": "rollup -c && uglifyjs  dst/app.js -c -m> dst/app.min.js ",
     "w": "rollup -c -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

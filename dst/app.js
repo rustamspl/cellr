@@ -1,4 +1,8 @@
-'use strict';
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(factory());
+}(this, (function () { 'use strict';
 
 var ErrorLogger = {
     log: function log() {}
@@ -79,6 +83,9 @@ var EventEmitter = Class({}, function() {
 
 var global = Function('return this;')();
 
+/**
+ * @typesign (cb: ());
+ */
 var nextTick;
 
 /* istanbul ignore next */
@@ -633,57 +640,69 @@ var ObsArray = Class$1(EventEmitter, function(_super) {
     };
 });
 
+var document = global.document;
+var createElement = document.createElement.bind(document);
+var appendChild = document.appendChild;
+var addEventListener = document.addEventListener;
+
 //-------------------------
-var posAtom = new Cell();
-var edAtom = new Cell();
-var ed2Atom = new Cell();
-var pressAtom = new Cell();
-var txtAtom = new Cell(function() {
-    return ' pos:' + (posAtom.get() || 'rr') + ' press:' + (pressAtom.get() || 'zzz');
+var pos = new Cell();
+var ed = new Cell();
+var ed2 = new Cell();
+var press = new Cell();
+var txt = new Cell(function() {
+    return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
 });
-var txt2Atom = new Cell(function() {
-    return 'ed:' + edAtom.get() + ' txt2:' + txtAtom.get() + ' double:' + (posAtom.get() * 2);
+var txt2 = new Cell(function() {
+    return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
 });
-var txt3Atom = new Cell(function() {
-    return 'ed2:' + ed2Atom.get() + ' txt2at:' + txt2Atom.get();
+var txt3 = new Cell(function() {
+    return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
 });
 //-------------------------
-document.addEventListener('DOMContentLoaded', function(evt) {
-    var div = document.createElement('div');
-    document.body.appendChild(div);
-    var div2 = document.createElement('div');
-    document.body.appendChild(div2);
-    var div3 = document.createElement('div');
-    document.body.appendChild(div3);
-    var ed = document.createElement('input');
-    document.body.appendChild(ed);
-    ed.onkeyup = function() {
-        edAtom.set(ed.value);
+addEventListener.call(document, 'DOMContentLoaded', function() {
+    var body = document.body;
+    var div = createElement('div');
+    var bodyAppend = appendChild.bind(body);
+    bodyAppend(div);
+    var div2 = createElement('div');
+    bodyAppend(div2);
+    var div3 = createElement('div');
+    bodyAppend(div3);
+    var div4 = createElement('div');
+    bodyAppend(div4);
+    div4.className = "zzzz";
+    var ted = createElement('input');
+    bodyAppend.call(div4, ted);
+    ted.onkeyup = function() {
+        ed.set(ted.value);
     };
-    var ed2 = document.createElement('input');
-    document.body.appendChild(ed2);
-    ed2.onkeyup = function() {
-        ed2Atom.set(ed2.value);
+    var ted2 = createElement('input');
+    bodyAppend(ted2);
+    ted2.onkeyup = function() {
+        ed2.set(ted2.value);
     };
-    txtAtom.on('change', function(v) {
-        div.innerHTML = txtAtom.get();
+    txt.on('change', function() {
+        div.innerHTML = txt.get();
     });
-    txt2Atom.on('change', function(v) {
-        div2.innerHTML = txt2Atom.get();
+    txt2.on('change', function() {
+        div2.innerHTML = txt2.get();
     });
-    txt3Atom.on('change', function(v) {
-        div3.innerHTML = txt3Atom.get();
+    txt3.on('change', function() {
+        div3.innerHTML = txt3.get();
     });
-    document.addEventListener('mousemove', function(evt) {
+    addEventListener.call(document, 'mousemove', function(evt) {
         //div.innerHTML = evt.x + ':' + evt.y;
-        posAtom.set(evt.x);
+        pos.set(evt.x);
     });
-    document.addEventListener('mousedown', function(evt) {
-        pressAtom.set('KU');
+    addEventListener.call(document, 'mousedown', function() {
+        press.set('KU');
         ///div2.innerHTML = 'down';
     });
-    document.addEventListener('mouseup', function(evt) {
+    addEventListener.call(document, 'mouseup', function() {
         //div2.innerHTML = 'up2';
-        pressAtom.set('UPpp');
+        press.set('UPpp');
     });
 });
+
+})));
