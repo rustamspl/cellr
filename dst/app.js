@@ -79,6 +79,9 @@ var EventEmitter = Class({}, function() {
 
 var global = Function('return this;')();
 
+/**
+ * @typesign (cb: ());
+ */
 var nextTick;
 
 /* istanbul ignore next */
