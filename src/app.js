@@ -1,16 +1,17 @@
 'use strict';
 import Cell from './Cell';
-import global from './js/global';
-import fetch from './js/fetch';
 import ObsList from './ObsList';
 import ObsMap from './ObsMap';
-import Node from './Node';
+import {
+    Node
+} from './Node';
 import {
     createElement,
     appendChild,
     addEventListener,
     document
 } from './utils/doc';
+import nextTick from './utils/nextTick';
 //-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var pos = new Cell();
@@ -67,11 +68,11 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
                         },
                         props: {
                             value: ttt.get(),
-                            onkeyup: function() {
-                                ttt.set(this.value);
-                            },
-                            onchange: function() {
-                                ttt.set(this.value);
+                            onkeydown: function() {
+                               var _this=this;
+                                setTimeout(function(){
+                                   ttt.set(_this.value); 
+                                },1);
                             }
                         }
                     });
@@ -89,7 +90,7 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     });
     document.body.appendChild(container.el);
     addEventListener.call(document, 'mousemove', function(evt) {
-        pos.set(evt.x);
-        attrs.set('class', 'cl' + evt.y);
+        pos.set(evt.clientX);
+        attrs.set('class', 'cl' + evt.clientY);
     });
 });

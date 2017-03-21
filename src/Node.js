@@ -146,7 +146,7 @@ function bindMapFactory(name) {
         }
     })
 }
-var Node = Class(Object.create(null), function(_super) {
+export var Node = Class(Object.create(null), function(_super) {
     return {
         _constructor: function(opts) {
             var opts = opts || Object.create(null);
@@ -199,4 +199,3 @@ var Node = Class(Object.create(null), function(_super) {
         }
     };
 });
-export default Node;
