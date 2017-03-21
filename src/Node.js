@@ -77,12 +77,13 @@ function _handleObsMapAttrs(evt) {
             return;
     }
 }
-var Node = Class({}, function(_super) {
+var Node = Class(Object.create(null), function(_super) {
     return {
         _constructor: function(opts) {
-            var opts = opts || {};
+            var opts = opts || Object.create(null);
             var el = this.el = createElement(opts.tag || 'div');
             var data = opts.data;
+            this._emitters = [];
             if (data instanceof ObsList) {
                 this._factory = opts.factory || _defaultFactory;
                 data.on('change', _handleObsListData, this);
@@ -92,7 +93,7 @@ var Node = Class({}, function(_super) {
             } else if (data) {
                 el.innerHTML = data;
             }
-            var attrs = opts.attrs || {};
+            var attrs = opts.attrs || Object.create(null);
             if (attrs instanceof ObsMap) {
                 attrs.on('change', _handleObsMapAttrs, this);
             } else {
@@ -102,11 +103,20 @@ var Node = Class({}, function(_super) {
             }
         },
         _setAttr: function(k, v) {
+            var old = this._cellAttr[k];
+            if (old) {
+                old.v.off(old.cb, this);
+            }
             if (v instanceof Cell) {
-                v.on('change', function(evt) {
+                var cb = function(evt) {
                     this._setAttrVal(k, evt.value);
-                }, this);
+                };
+                v.on('change', cb, this);
                 this._setAttrVal(k, v.get());
+                this._cellAttr[k] = {
+                    v: v,
+                    vb: cb
+                };
             } else {
                 this._setAttrVal(k, v);
             }
@@ -121,6 +131,26 @@ var Node = Class({}, function(_super) {
                 return;
             }
             this.el.setAttribute(k, v);
+        },
+        addEmitter: function(emitter) {
+            var ind, emitters = this._emitters;
+            if ((ind = emitters.indexOf(emitter)) != -1) {
+                return;
+            }
+            this._emitters.push(emitter);
+        },
+        removeEmitter: function(emitter) {
+            var ind, emitters = this._emitters;
+            if ((ind = emitters.indexOf(emitter)) != -1) {
+                emitters.splice(ind, 1);
+            }
+        }
+        offEmitters: function() {
+            var emitters = this._emitters;
+            for (var i = 0, l = emitters.length; i < l; i++) {
+                emitters[i].offCtx(this);
+            }
+            this._emitters = [];
         }
     };
 });

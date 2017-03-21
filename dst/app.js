@@ -63,13 +63,17 @@ var EventEmitter = Class({}, function() {
             }
         },
         on: function(evt, cb, ctx) {
+            if (!ctx) {
+                throw new Error('Empty ctx');
+            }
             var callbacks = this._cbs;
             var h = (callbacks[evt] = callbacks[evt] || {
                 cbs: [],
                 ctx: []
             });
             h.cbs.push(cb);
-            h.ctx.push(ctx || this);
+            h.ctx.push(ctx);
+            ctx.addEmitter(this);
         },
         off: function(evt, cb, ctx) {
             var handlers = this._cbs[evt];
@@ -89,9 +93,6 @@ var EventEmitter = Class({}, function() {
 
 var global = Function('return this;')();
 
-/**
- * @typesign (cb: ());
- */
 var nextTick;
 /* istanbul ignore next */
 if (global.process && process.toString() == '[object process]' && process.nextTick) {
@@ -780,6 +781,7 @@ var Node = Class$1({}, function(_super) {
             var opts = opts || {};
             var el = this.el = createElement(opts.tag || 'div');
             var data = opts.data;
+            this._emitters = [];
             if (data instanceof ObsList) {
                 this._factory = opts.factory || _defaultFactory;
                 data.on('change', _handleObsListData, this);
@@ -818,25 +820,13 @@ var Node = Class$1({}, function(_super) {
                 return;
             }
             this.el.setAttribute(k, v);
+        },
+        addEmitter: function(emitter) {
+            this._emitters.push(emitter);
         }
     };
 });
 
-//-------------------------
-// var ed = new Cell();
-// var ed2 = new Cell();
-// var press = new Cell();
-// var txt = new Cell(function() {
-//     return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
-// });
-// var txt2 = new Cell(function() {
-//     return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
-// });
-// var txt3 = new Cell(function() {
-//     return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
-// });
-//-------------------------
-//-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
@@ -870,7 +860,7 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     //-----
     //------
     var btnRemove1 = createElement('button');
-    btnRemove1.innerHTML = 'btnZZZ';
+    btnRemove1.innerHTML = 'btnZZZ11';
     bodyAppend(btnRemove1);
     btnRemove1.onclick = function() {
         a.change([456, 678, 446]);

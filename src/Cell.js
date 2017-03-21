@@ -15,7 +15,7 @@ var MAX = Number.MAX_SAFE_INTEGER || 0x1fffffffffffff;
 //var errorIndexCounter = 0;
 var pushingIndexCounter = 0;
 var G = {
-    relPl: {}
+    relPl: Object.create(null)
 };
 var relPlIndex = MAX;
 var relPlToInd = -1;
@@ -115,7 +115,7 @@ var Cell = Class(EventEmitter, function(_super) {
         _constructor: function(value, opts) {
             _super.call(this);
             if (!opts) {
-                opts = {};
+                opts = Object.create(null);
             }
   
             this.owner = opts.owner || this;

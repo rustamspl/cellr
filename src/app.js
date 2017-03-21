@@ -57,7 +57,7 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     //-----
     //------
     var btnRemove1 = createElement('button');
-    btnRemove1.innerHTML = 'btnZZZ';
+    btnRemove1.innerHTML = 'btnZZZ11';
     bodyAppend(btnRemove1);
     btnRemove1.onclick = function() {
         a.change([456, 678, 446]);
