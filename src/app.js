@@ -24,6 +24,8 @@ import {
 // });
 //-------------------------
 //-------------------------
+
+
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
@@ -68,8 +70,9 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
         factory: function(val) {
             return new Node({
                 tag: 'input',
-                attrs: {
-                    value: val
+                props: {
+                    value: val,
+                    className:'inp1'
                 }
             });
         }
@@ -118,4 +121,6 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     //     //div2.innerHTML = 'up2';
     //     press.set('UPpp');
     // });
+
+   
 });

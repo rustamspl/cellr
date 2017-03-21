@@ -79,6 +79,9 @@ var EventEmitter = Class(Object.create(null), function() {
 
 var global = Function('return this;')();
 
+/**
+ * @typesign (cb: ());
+ */
 var nextTick;
 /* istanbul ignore next */
 if (global.process && process.toString() == '[object process]' && process.nextTick) {
@@ -759,8 +762,8 @@ function handleObsListData(evt) {
     }
     return true;
 }
-
-function handleObsMapAttrs(evt) {
+//==============================================
+function handleObsMapSetter(setter, evt) {
     if (!this.active) return;
     var el = this.el;
     switch (evt.method) {
@@ -769,18 +772,65 @@ function handleObsMapAttrs(evt) {
             var attrs = evt.value;
             for (var k in oldValue) {
                 if (!(k in value)) {
-                    this._setAttr(k);
+                    setter(k);
                 }
             }
             for (var k in attrs) {
-                this._setAttr(k, attrs[k]);
+                setter(k, attrs[k]);
             }
             break;
         case 'set':
-            this._setAttr(evt.key, evt.value);
+            setter(evt.key, evt.value);
             break;
     }
     return true;
+}
+var setPropFns = {};
+
+function setPropFactory(t) {
+    var setter = '_set' + t + 'Val';
+    return setPropFns[t] || (setPropFns[t] = function(k, v) {
+        var mapD = this._mapd || (this._mapd = {});
+        var mapData = mapD[t] || (mapD[t] = {
+            cbs: {},
+            cls: {}
+        });
+        var cbs = mapData.cbs;
+        var cb = cbs[k] || (cbs[k] = (function(evt) {
+            if (!this.active) return;
+            this[setter](k, evt.value);
+            return true;
+        }).bind(this));
+        var cls = mapData.cls;
+        if (k in cls) {
+            cls[k].off(cb);
+            delete cls[k];
+        }
+        if (v instanceof Cell) {
+            v.on('change', cb);
+            this[setter](k, v.get());
+            cls[k] = v;
+        } else {
+            this[setter](k, v);
+        }
+    });
+}
+var bindMapFns = {};
+
+function bindMapFactory(name) {
+    var setProp = setPropFactory(name);
+    return bindMapFns[name] || (bindMapFns[name] = function(map) {
+        if (!map) return;
+        var _setProp = setProp.bind(this);
+        if (map instanceof ObsMap) {
+            var _handleObsMapAttrs = handleObsMapSetter.bind(this, _setProp);
+            map.on('change', _handleObsMapAttrs);
+        } else {
+            for (var k in map) {
+                _setProp(k, map[k]);
+            }
+        }
+    })
 }
 var Node = Class$1(Object.create(null), function(_super) {
     return {
@@ -801,35 +851,9 @@ var Node = Class$1(Object.create(null), function(_super) {
             } else if (data) {
                 el.innerHTML = data;
             }
-            var attrs = opts.attrs || Object.create(null);
-            if (attrs instanceof ObsMap) {
-                var _handleObsMapAttrs = handleObsMapAttrs.bind(this);
-                attrs.on('change', _handleObsMapAttrs);
-            } else {
-                for (var k in attrs) {
-                    this._setAttr(k, attrs[k]);
-                }
-            }
-        },
-        _setAttr: function(k, v) {
-            var cbAttr = this._cbAttr = this._cbAttr || {};
-            var cb = cbAttr[k] || (cbAttr[k] = (function(evt) {
-                if (!this.active) return;
-                this._setAttrVal(k, evt.value);
-                return true;
-            }).bind(this));
-            var cellAttr = this._cellAttr = this._cellAttr || {};
-            if (k in cellAttr) {
-                cellAttr[k].off(cb);
-                delete cellAttr[k];
-            }
-            if (v instanceof Cell) {
-                v.on('change', cb);
-                this._setAttrVal(k, v.get());
-                cellAttr[k] = v;
-            } else {
-                this._setAttrVal(k, v);
-            }
+            bindMapFactory('Attr').call(this, opts.attrs);
+            bindMapFactory('Prop').call(this, opts.props);
+            bindMapFactory('Style').call(this, opts.style);
         },
         _setAttrVal: function(k, v) {
             if (!v) {
@@ -837,6 +861,12 @@ var Node = Class$1(Object.create(null), function(_super) {
                 return;
             }
             this.el.setAttribute(k, v);
+        },
+        _setPropVal: function(k, v) {
+            this.el[k] = v;
+        },
+        _setStyleVal: function(k, v) {
+            this.el.style[k] = v;
         },
         deactivate: function() {
             var childs = this._childs;
@@ -848,6 +878,23 @@ var Node = Class$1(Object.create(null), function(_super) {
         }
     };
 });
+
+//-------------------------
+// var ed = new Cell();
+// var ed2 = new Cell();
+// var press = new Cell();
+// var txt = new Cell(function() {
+//     return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
+// });
+// var txt2 = new Cell(function() {
+//     return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
+// });
+// var txt3 = new Cell(function() {
+//     return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
+// });
+//-------------------------
+//-------------------------
+
 
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
@@ -893,8 +940,9 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
         factory: function(val) {
             return new Node({
                 tag: 'input',
-                attrs: {
-                    value: val
+                props: {
+                    value: val,
+                    className:'inp1'
                 }
             });
         }
@@ -943,6 +991,8 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     //     //div2.innerHTML = 'up2';
     //     press.set('UPpp');
     // });
+
+   
 });
 
 }());
