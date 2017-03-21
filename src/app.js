@@ -24,17 +24,13 @@ import {
 // });
 //-------------------------
 //-------------------------
-
-
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
-
-    var attrs=new ObsMap();
-
+    var attrs = new ObsMap();
     var view = new Node({
         data: pos,
-        attrs:attrs
+        attrs: attrs
     });
     bodyAppend(view.el);
     var a = new ObsList();
@@ -70,9 +66,11 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
         factory: function(val) {
             return new Node({
                 tag: 'input',
+                attrs :{
+                    'class': 'inp221'
+                },
                 props: {
-                    value: val,
-                    className:'inp1'
+                    value: val
                 }
             });
         }
@@ -81,7 +79,7 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     addEventListener.call(document, 'mousemove', function(evt) {
         //div.innerHTML = evt.x + ':' + evt.y;
         pos.set(evt.x);
-        attrs.set('class','cl'+evt.y);
+        attrs.set('class', 'cl' + evt.y);
     });
     // 
     // 
@@ -121,6 +119,4 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     //     //div2.innerHTML = 'up2';
     //     press.set('UPpp');
     // });
-
-   
 });

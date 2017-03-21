@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "promise-polyfill": "^6.0.2",
     "rollup": "^0.41.4",
-    "uglifyjs": "^2.4.10"
+    "uglifyjs": "^2.4.10",
+    "whatwg-fetch": "^2.0.3"
   },
   "devDependencies": {
     "babel-eslint": "^7.1.1",
