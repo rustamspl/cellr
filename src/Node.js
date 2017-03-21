@@ -155,6 +155,11 @@ var Node = Class(Object.create(null), function(_super) {
                 this._factory = opts.factory || _defaultFactory;
                 var _handleObsListData = handleObsListData.bind(this);
                 data.on('change', _handleObsListData);
+            } else if (data instanceof Array) {
+                this._childs = data;
+                for (var i = 0, l = data.length; i < l; i++) {
+                    el.appendChild(data[i].el);
+                }
             } else if (data instanceof Cell) {
                 var _handleCellData = handleCellData.bind(this);
                 data.on('change', _handleCellData, this);
