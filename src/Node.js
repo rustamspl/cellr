@@ -146,10 +146,6 @@ var Node = Class(Object.create(null), function(_super) {
             }
         },
         _setAttrVal: function(k, v) {
-            if (k == 'value') {
-                this.el.value = v;
-                return;
-            }
             if (!v) {
                 this.el.removeAttribute(k);
                 return;

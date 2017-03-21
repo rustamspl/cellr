@@ -15,7 +15,7 @@ var EventEmitter = Class(Object.create(null), function() {
             var callbacks = this._cbs[evt.type];
             if (!callbacks) {
                 return;
-            };
+            };          
             for (var i = callbacks.length - 1; i >= 0; i--) {
                 if (!(callbacks[i](evt))) {
                     callbacks.splice(i, 1);
