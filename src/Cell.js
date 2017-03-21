@@ -5,11 +5,9 @@ import {
     Class
 } from './js/Object';
 import nextTick from './utils/nextTick';
-
-
 var EventEmitterProto = EventEmitter.prototype;
 var evtOn = EventEmitterProto.on;
-var evtOff = EventEmitterProto.off;
+//var evtOff = EventEmitterProto.off;
 var evtEmit = EventEmitterProto.emit;
 var MAX = Number.MAX_SAFE_INTEGER || 0x1fffffffffffff;
 //var errorIndexCounter = 0;
@@ -110,14 +108,31 @@ function rel() {
         }
     }
 }
+
+function onValCh(evt) {
+    this._pushInd = ++pushingIndexCounter;
+    if (this._chEvt) {
+        evt.prev = this._chEvt;
+        this._chEvt = evt;
+        if (this._val === this._fixedValue) {
+            this._canCancelCh = false;
+        }
+    } else {
+        evt.prev = null;
+        this._chEvt = evt;
+        this._canCancelCh = false;
+        this._addToRel();
+    }
+    return true;
+}
 var Cell = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(value, opts) {
             _super.call(this);
+            this._onValCh = onValCh.bind(this);
             if (!opts) {
                 opts = Object.create(null);
             }
-  
             this.owner = opts.owner || this;
             this._clc = typeof value == 'function' ? value : null;
             this._validate = opts.validate || null;
@@ -129,7 +144,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 }
                 this._fixedValue = this._val = value;
                 if (value instanceof EventEmitter) {
-                    value.on('change', this._onValCh, this);
+                    value.on('change', this._onValCh);
                 }
             }
             this._error = null;
@@ -236,21 +251,6 @@ var Cell = Class(EventEmitter, function(_super) {
             if (!relPlned && !curlyRel) {
                 relPlned = true;
                 nextTick(rel);
-            }
-        },
-        _onValCh: function _onValCh(evt) {
-            this._pushInd = ++pushingIndexCounter;
-            if (this._chEvt) {
-                evt.prev = this._chEvt;
-                this._chEvt = evt;
-                if (this._val === this._fixedValue) {
-                    this._canCancelCh = false;
-                }
-            } else {
-                evt.prev = null;
-                this._chEvt = evt;
-                this._canCancelCh = false;
-                this._addToRel();
             }
         },
         get: function get() {
@@ -396,10 +396,10 @@ var Cell = Class(EventEmitter, function(_super) {
             }
             this._val = value;
             if (oldValue instanceof EventEmitter) {
-                oldValue.off('change', this._onValCh, this);
+                oldValue.off('change', this._onValCh);
             }
             if (value instanceof EventEmitter) {
-                value.on('change', this._onValCh, this);
+                value.on('change', this._onValCh);
             }
             if (this._hasFols) {
                 if (this._chEvt) {

@@ -12,55 +12,29 @@ var EventEmitter = Class(Object.create(null), function() {
                     type: evt
                 };
             }
-            var handlers = this._cbs[evt.type];
-            if (!handlers) {
+            var callbacks = this._cbs[evt.type];
+            if (!callbacks) {
                 return;
             };
-            var callbacks = handlers.cbs;
-            if (!callbacks.length) {
-                return;
-            };
-            var ctx = handlers.ctx;
-            for (var i = 0, l = callbacks.length; i < l; i++) {
-                callbacks[i].call(ctx[i], evt);
-            }
-        },
-        on: function(evt, cb, ctx) {
-            if (!ctx) {
-                throw new Error('Empty ctx');
-            }
-            var callbacks = this._cbs;
-            var h = (callbacks[evt] = callbacks[evt] || {
-                cbs: [],
-                ctx: []
-            });
-            h.cbs.push(cb);
-            h.ctx.push(ctx);
-            ctx.addEmitter(this);
-        },
-        off: function(evt, cb, ctx) {
-            var handlers = this._cbs[evt];
-            if (!handlers) {
-                return;
-            };
-            var cbs = handlers.cbs;
-            var ctxs = handlers.ctx;
-            var ind = cbs.indexOf(cb);
-            if (ind > -1 && ctxs[ind] === ctx) {
-                cbs.splice(ind, 1);
-                ctxs.splice(ind, 1);
-            }
-        },
-        offCtx: function(ctx) {
-            var ind, allCbs = this._cbs;
-            for (var evt in allCbs) {
-                var handlers = allCbs[evt];
-                var cbs = handlers.cbs;
-                var ctxs = handlers.ctx;
-                while ((ind = cbs.indexOf(ctx)) != -1) {
-                    cbs.splice(ind, 1);
-                    ctxs.splice(ind, 1);
+            for (var i = callbacks.length - 1; i >= 0; i--) {
+                if (!(callbacks[i](evt))) {
+                    callbacks.splice(i, 1);
                 }
+            }
+        },
+        on: function(evt, cb) {
+            var callbacks = this._cbs;
+            var h = (callbacks[evt] = callbacks[evt] || []);
+            h.push(cb);
+        },
+        off: function(evt, cb) {
+            var cbs = this._cbs[evt];
+            if (!cbs) {
+                return;
+            };
+            var ind = cbs.indexOf(cb);
+            if (ind > -1) {
+                cbs.splice(ind, 1);
             }
         }
     };

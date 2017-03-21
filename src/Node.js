@@ -18,11 +18,14 @@ function _defaultFactory(data) {
     })
 }
 
-function _handleCellData(evt) {
+function handleCellData(evt) {
+    if (!this.active) return;
     this.el.innerHTML = evt.value;
+    return true;
 }
 
-function _handleObsListData(evt) {
+function handleObsListData(evt) {
+    if (!this.active) return;
     var el = this.el;
     switch (evt.method) {
         case 'change':
@@ -34,7 +37,7 @@ function _handleObsListData(evt) {
                 var newNode = this._factory(val[i]);
                 el.appendChild(newNode.el);
             }
-            return;
+            break;
         case 'set':
             var newNode = this._factory(evt.value);
             if (evt.oldLength == 0) {
@@ -42,7 +45,7 @@ function _handleObsListData(evt) {
             } else {
                 el.replaceChild(newNode.el, el.childNodes[evt.index]);
             }
-            return;
+            break;
         case 'insert':
             var newNode = this._factory(evt.value);
             if (evt.oldLength <= evt.index) {
@@ -50,14 +53,16 @@ function _handleObsListData(evt) {
             } else {
                 el.insertBefore(newNode.el, el.childNodes[evt.index]);
             }
-            return;
+            break;
         case 'remove':
             el.removeChild(el.childNodes[evt.index]);
-            return;
+            break;
     }
+    return true;
 }
 
-function _handleObsMapAttrs(evt) {
+function handleObsMapAttrs(evt) {
+    if (!this.active) return;
     var el = this.el;
     switch (evt.method) {
         case 'change':
@@ -71,11 +76,12 @@ function _handleObsMapAttrs(evt) {
             for (var k in attrs) {
                 this._setAttr(k, attrs[k]);
             }
-            return;
+            break;
         case 'set':
             this._setAttr(evt.key, evt.value);
-            return;
+            break;
     }
+    return true;
 }
 var Node = Class(Object.create(null), function(_super) {
     return {
@@ -84,17 +90,23 @@ var Node = Class(Object.create(null), function(_super) {
             var el = this.el = createElement(opts.tag || 'div');
             var data = opts.data;
             this._emitters = [];
+            this.active = true;
+            
             if (data instanceof ObsList) {
                 this._factory = opts.factory || _defaultFactory;
-                data.on('change', _handleObsListData, this);
+                var _handleObsListData = this._handleObsListData = handleObsListData.bind(this);
+                data.on('change', _handleObsListData);
             } else if (data instanceof Cell) {
+                var _handleCellData = this._handleCellData = handleCellData.bind(this);
                 data.on('change', _handleCellData, this);
                 el.innerHTML = data.get();
             } else if (data) {
                 el.innerHTML = data;
             }
+
             var attrs = opts.attrs || Object.create(null);
             if (attrs instanceof ObsMap) {
+                var _handleObsMapAttrs = this._handleObsMapAttrs = handleObsMapAttrs.bind(this);
                 attrs.on('change', _handleObsMapAttrs, this);
             } else {
                 for (var k in attrs) {
@@ -103,20 +115,21 @@ var Node = Class(Object.create(null), function(_super) {
             }
         },
         _setAttr: function(k, v) {
-            var old = this._cellAttr[k];
-            if (old) {
-                old.v.off(old.cb, this);
+            var cbAttr = this._cbAttr = this._cbAttr || {};
+            var cb = cbAttr[k] || (cbAttr[k] = (function(evt) {
+                if (!this.active) return;
+                this._setAttrVal(k, evt.value);
+                return true;
+            }).bind(this));
+            var cellAttr = this._cellAttr = this._cellAttr || {};
+            if (k in cellAttr) {
+                cellAttr[k].off(cb);
+                delete cellAttr[k];
             }
             if (v instanceof Cell) {
-                var cb = function(evt) {
-                    this._setAttrVal(k, evt.value);
-                };
-                v.on('change', cb, this);
+                v.on('change', cb);
                 this._setAttrVal(k, v.get());
-                this._cellAttr[k] = {
-                    v: v,
-                    vb: cb
-                };
+                cellAttr[k] = v;
             } else {
                 this._setAttrVal(k, v);
             }
@@ -131,26 +144,6 @@ var Node = Class(Object.create(null), function(_super) {
                 return;
             }
             this.el.setAttribute(k, v);
-        },
-        addEmitter: function(emitter) {
-            var ind, emitters = this._emitters;
-            if ((ind = emitters.indexOf(emitter)) != -1) {
-                return;
-            }
-            this._emitters.push(emitter);
-        },
-        removeEmitter: function(emitter) {
-            var ind, emitters = this._emitters;
-            if ((ind = emitters.indexOf(emitter)) != -1) {
-                emitters.splice(ind, 1);
-            }
-        }
-        offEmitters: function() {
-            var emitters = this._emitters;
-            for (var i = 0, l = emitters.length; i < l; i++) {
-                emitters[i].offCtx(this);
-            }
-            this._emitters = [];
         }
     };
 });

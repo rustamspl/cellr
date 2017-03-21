@@ -38,10 +38,10 @@ function Class(_super, _factory) {
 }
 //-------------
 
-var EventEmitter = Class({}, function() {
+var EventEmitter = Class(Object.create(null), function() {
     return {
         _constructor: function() {
-            this._cbs = {};
+            this._cbs = Object.create(null);
         },
         emit: function(evt) {
             if (!evt.type) {
@@ -49,43 +49,29 @@ var EventEmitter = Class({}, function() {
                     type: evt
                 };
             }
-            var handlers = this._cbs[evt.type];
-            if (!handlers) {
+            var callbacks = this._cbs[evt.type];
+            if (!callbacks) {
                 return;
             }
-            var callbacks = handlers.cbs;
-            if (!callbacks.length) {
-                return;
-            }
-            var ctx = handlers.ctx;
-            for (var i = 0, l = callbacks.length; i < l; i++) {
-                callbacks[i].call(ctx[i], evt);
+            for (var i = callbacks.length - 1; i >= 0; i--) {
+                if (!(callbacks[i](evt))) {
+                    callbacks.splice(i, 1);
+                }
             }
         },
-        on: function(evt, cb, ctx) {
-            if (!ctx) {
-                throw new Error('Empty ctx');
-            }
+        on: function(evt, cb) {
             var callbacks = this._cbs;
-            var h = (callbacks[evt] = callbacks[evt] || {
-                cbs: [],
-                ctx: []
-            });
-            h.cbs.push(cb);
-            h.ctx.push(ctx);
-            ctx.addEmitter(this);
+            var h = (callbacks[evt] = callbacks[evt] || []);
+            h.push(cb);
         },
-        off: function(evt, cb, ctx) {
-            var handlers = this._cbs[evt];
-            if (!handlers) {
+        off: function(evt, cb) {
+            var cbs = this._cbs[evt];
+            if (!cbs) {
                 return;
             }
-            var cbs = handlers.cbs;
-            var ctxs = handlers.ctx;
             var ind = cbs.indexOf(cb);
-            if (ind > -1 && ctxs[ind] === ctx) {
+            if (ind > -1) {
                 cbs.splice(ind, 1);
-                ctxs.splice(ind, 1);
             }
         }
     };
@@ -136,13 +122,13 @@ var nextTick$1 = nextTick;
 
 var EventEmitterProto = EventEmitter.prototype;
 var evtOn = EventEmitterProto.on;
-var evtOff = EventEmitterProto.off;
+//var evtOff = EventEmitterProto.off;
 var evtEmit = EventEmitterProto.emit;
 var MAX = Number.MAX_SAFE_INTEGER || 0x1fffffffffffff;
 //var errorIndexCounter = 0;
 var pushingIndexCounter = 0;
 var G = {
-    relPl: {}
+    relPl: Object.create(null)
 };
 var relPlIndex = MAX;
 var relPlToInd = -1;
@@ -237,14 +223,31 @@ function rel() {
         }
     }
 }
+
+function onValCh(evt) {
+    this._pushInd = ++pushingIndexCounter;
+    if (this._chEvt) {
+        evt.prev = this._chEvt;
+        this._chEvt = evt;
+        if (this._val === this._fixedValue) {
+            this._canCancelCh = false;
+        }
+    } else {
+        evt.prev = null;
+        this._chEvt = evt;
+        this._canCancelCh = false;
+        this._addToRel();
+    }
+    return true;
+}
 var Cell = Class(EventEmitter, function(_super) {
     return {
         _constructor: function(value, opts) {
             _super.call(this);
+            this._onValCh = onValCh.bind(this);
             if (!opts) {
-                opts = {};
+                opts = Object.create(null);
             }
-  
             this.owner = opts.owner || this;
             this._clc = typeof value == 'function' ? value : null;
             this._validate = opts.validate || null;
@@ -256,7 +259,7 @@ var Cell = Class(EventEmitter, function(_super) {
                 }
                 this._fixedValue = this._val = value;
                 if (value instanceof EventEmitter) {
-                    value.on('change', this._onValCh, this);
+                    value.on('change', this._onValCh);
                 }
             }
             this._error = null;
@@ -363,21 +366,6 @@ var Cell = Class(EventEmitter, function(_super) {
             if (!relPlned && !curlyRel) {
                 relPlned = true;
                 nextTick$1(rel);
-            }
-        },
-        _onValCh: function _onValCh(evt) {
-            this._pushInd = ++pushingIndexCounter;
-            if (this._chEvt) {
-                evt.prev = this._chEvt;
-                this._chEvt = evt;
-                if (this._val === this._fixedValue) {
-                    this._canCancelCh = false;
-                }
-            } else {
-                evt.prev = null;
-                this._chEvt = evt;
-                this._canCancelCh = false;
-                this._addToRel();
             }
         },
         get: function get() {
@@ -523,10 +511,10 @@ var Cell = Class(EventEmitter, function(_super) {
             }
             this._val = value;
             if (oldValue instanceof EventEmitter) {
-                oldValue.off('change', this._onValCh, this);
+                oldValue.off('change', this._onValCh);
             }
             if (value instanceof EventEmitter) {
-                value.on('change', this._onValCh, this);
+                value.on('change', this._onValCh);
             }
             if (this._hasFols) {
                 if (this._chEvt) {
@@ -716,11 +704,14 @@ function _defaultFactory(data) {
     })
 }
 
-function _handleCellData(evt) {
+function handleCellData(evt) {
+    if (!this.active) return;
     this.el.innerHTML = evt.value;
+    return true;
 }
 
-function _handleObsListData(evt) {
+function handleObsListData(evt) {
+    if (!this.active) return;
     var el = this.el;
     switch (evt.method) {
         case 'change':
@@ -732,7 +723,7 @@ function _handleObsListData(evt) {
                 var newNode = this._factory(val[i]);
                 el.appendChild(newNode.el);
             }
-            return;
+            break;
         case 'set':
             var newNode = this._factory(evt.value);
             if (evt.oldLength == 0) {
@@ -740,7 +731,7 @@ function _handleObsListData(evt) {
             } else {
                 el.replaceChild(newNode.el, el.childNodes[evt.index]);
             }
-            return;
+            break;
         case 'insert':
             var newNode = this._factory(evt.value);
             if (evt.oldLength <= evt.index) {
@@ -748,14 +739,16 @@ function _handleObsListData(evt) {
             } else {
                 el.insertBefore(newNode.el, el.childNodes[evt.index]);
             }
-            return;
+            break;
         case 'remove':
             el.removeChild(el.childNodes[evt.index]);
-            return;
+            break;
     }
+    return true;
 }
 
-function _handleObsMapAttrs(evt) {
+function handleObsMapAttrs(evt) {
+    if (!this.active) return;
     var el = this.el;
     switch (evt.method) {
         case 'change':
@@ -769,30 +762,37 @@ function _handleObsMapAttrs(evt) {
             for (var k in attrs) {
                 this._setAttr(k, attrs[k]);
             }
-            return;
+            break;
         case 'set':
             this._setAttr(evt.key, evt.value);
-            return;
+            break;
     }
+    return true;
 }
-var Node = Class$1({}, function(_super) {
+var Node = Class$1(Object.create(null), function(_super) {
     return {
         _constructor: function(opts) {
-            var opts = opts || {};
+            var opts = opts || Object.create(null);
             var el = this.el = createElement(opts.tag || 'div');
             var data = opts.data;
             this._emitters = [];
+            this.active = true;
+            
             if (data instanceof ObsList) {
                 this._factory = opts.factory || _defaultFactory;
-                data.on('change', _handleObsListData, this);
+                var _handleObsListData = this._handleObsListData = handleObsListData.bind(this);
+                data.on('change', _handleObsListData);
             } else if (data instanceof Cell) {
+                var _handleCellData = this._handleCellData = handleCellData.bind(this);
                 data.on('change', _handleCellData, this);
                 el.innerHTML = data.get();
             } else if (data) {
                 el.innerHTML = data;
             }
-            var attrs = opts.attrs || {};
+
+            var attrs = opts.attrs || Object.create(null);
             if (attrs instanceof ObsMap) {
+                var _handleObsMapAttrs = this._handleObsMapAttrs = handleObsMapAttrs.bind(this);
                 attrs.on('change', _handleObsMapAttrs, this);
             } else {
                 for (var k in attrs) {
@@ -801,11 +801,21 @@ var Node = Class$1({}, function(_super) {
             }
         },
         _setAttr: function(k, v) {
+            var cbAttr = this._cbAttr = this._cbAttr || {};
+            var cb = cbAttr[k] || (cbAttr[k] = (function(evt) {
+                if (!this.active) return;
+                this._setAttrVal(k, evt.value);
+                return true;
+            }).bind(this));
+            var cellAttr = this._cellAttr = this._cellAttr || {};
+            if (k in cellAttr) {
+                cellAttr[k].off(cb);
+                delete cellAttr[k];
+            }
             if (v instanceof Cell) {
-                v.on('change', function(evt) {
-                    this._setAttrVal(k, evt.value);
-                }, this);
+                v.on('change', cb);
                 this._setAttrVal(k, v.get());
+                cellAttr[k] = v;
             } else {
                 this._setAttrVal(k, v);
             }
@@ -820,9 +830,6 @@ var Node = Class$1({}, function(_super) {
                 return;
             }
             this.el.setAttribute(k, v);
-        },
-        addEmitter: function(emitter) {
-            this._emitters.push(emitter);
         }
     };
 });
