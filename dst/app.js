@@ -79,9 +79,6 @@ var EventEmitter = Class(Object.create(null), function() {
 
 var global = Function('return this;')();
 
-/**
- * @typesign (cb: ());
- */
 var nextTick;
 /* istanbul ignore next */
 if (global.process && process.toString() == '[object process]' && process.nextTick) {
@@ -716,35 +713,48 @@ function handleCellData(evt) {
 function handleObsListData(evt) {
     if (!this.active) return;
     var el = this.el;
+    var childs = this._childs;
     switch (evt.method) {
         case 'change':
             for (var i = 0, l = evt.oldValue.length; i < l; i++) {
                 el.removeChild(el.firstChild);
+                childs[i].deactivate();
             }
             var val = evt.value;
             for (var i = 0, l = val.length; i < l; i++) {
                 var newNode = this._factory(val[i]);
                 el.appendChild(newNode.el);
+                childs.push(newNode);
             }
             break;
         case 'set':
             var newNode = this._factory(evt.value);
             if (evt.oldLength == 0) {
                 el.appendChild(newNode.el);
+                childs.push(newNode);
             } else {
-                el.replaceChild(newNode.el, el.childNodes[evt.index]);
+                var i = evt.index;
+                childs[i].deactivate();
+                el.replaceChild(newNode.el, el.childNodes[i]);
+                childs[i] = newNode;
             }
             break;
         case 'insert':
             var newNode = this._factory(evt.value);
             if (evt.oldLength <= evt.index) {
                 el.appendChild(newNode.el);
+                childs.push(newNode);
             } else {
-                el.insertBefore(newNode.el, el.childNodes[evt.index]);
+                var i = evt.index;
+                el.insertBefore(newNode.el, el.childNodes[i]);
+                childs.splice(i, 0, newNode);
             }
             break;
         case 'remove':
+            var i = evt.index;
             el.removeChild(el.childNodes[evt.index]);
+            childs[i].deactivate();
+            childs.splice(i, 1);
             break;
     }
     return true;
@@ -778,25 +788,23 @@ var Node = Class$1(Object.create(null), function(_super) {
             var opts = opts || Object.create(null);
             var el = this.el = createElement(opts.tag || 'div');
             var data = opts.data;
-            this._emitters = [];
+            this._childs = [];
             this.active = true;
-            
             if (data instanceof ObsList) {
                 this._factory = opts.factory || _defaultFactory;
-                var _handleObsListData = this._handleObsListData = handleObsListData.bind(this);
+                var _handleObsListData = handleObsListData.bind(this);
                 data.on('change', _handleObsListData);
             } else if (data instanceof Cell) {
-                var _handleCellData = this._handleCellData = handleCellData.bind(this);
+                var _handleCellData = handleCellData.bind(this);
                 data.on('change', _handleCellData, this);
                 el.innerHTML = data.get();
             } else if (data) {
                 el.innerHTML = data;
             }
-
             var attrs = opts.attrs || Object.create(null);
             if (attrs instanceof ObsMap) {
-                var _handleObsMapAttrs = this._handleObsMapAttrs = handleObsMapAttrs.bind(this);
-                attrs.on('change', _handleObsMapAttrs, this);
+                var _handleObsMapAttrs = handleObsMapAttrs.bind(this);
+                attrs.on('change', _handleObsMapAttrs);
             } else {
                 for (var k in attrs) {
                     this._setAttr(k, attrs[k]);
@@ -833,25 +841,18 @@ var Node = Class$1(Object.create(null), function(_super) {
                 return;
             }
             this.el.setAttribute(k, v);
+        },
+        deactivate: function() {
+            var childs = this._childs;
+            for (var i = 0, l = childs.length; i < l; i++) {
+                childs[i].deactivate();
+            }
+            this._childs = [];
+            this.active = false;
         }
     };
 });
 
-//-------------------------
-// var ed = new Cell();
-// var ed2 = new Cell();
-// var press = new Cell();
-// var txt = new Cell(function() {
-//     return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
-// });
-// var txt2 = new Cell(function() {
-//     return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
-// });
-// var txt3 = new Cell(function() {
-//     return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
-// });
-//-------------------------
-//-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
