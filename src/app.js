@@ -11,7 +11,6 @@ import {
     addEventListener,
     document
 } from './utils/doc';
-
 //-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var pos = new Cell();
@@ -79,8 +78,11 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
                     ttt.on('change', function(evt) {
                         n.el.value = evt.value;
                         return true;
-                    })
-                    return n;
+                    });
+                    var root = new Node({
+                        data: [n, val]
+                    });
+                    return root;
                 }
             })
         ]

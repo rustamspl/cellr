@@ -1329,6 +1329,9 @@ var createElement = document.createElement.bind(document);
 var addEventListener = document.addEventListener;
 
 function _defaultFactory(data) {
+    if (data instanceof Node) {
+        return data;
+    }
     return new Node({
         data: data
     })
@@ -1472,9 +1475,11 @@ var Node = Class$1(Object.create(null), function(_super) {
                 var _handleObsListData = handleObsListData.bind(this);
                 data.on('change', _handleObsListData);
             } else if (data instanceof Array) {
-                this._childs = data;
+                this._factory = opts.factory || _defaultFactory;
                 for (var i = 0, l = data.length; i < l; i++) {
-                    el.appendChild(data[i].el);
+                    var newNode = this._factory(data[i]);
+                    this._childs.push(newNode);
+                    el.appendChild(newNode.el);
                 }
             } else if (data instanceof Cell) {
                 var _handleCellData = handleCellData.bind(this);
@@ -1579,7 +1584,10 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
                         n.el.value = evt.value;
                         return true;
                     });
-                    return n;
+                    var root = new Node({
+                        data: [n, val]
+                    });
+                    return root;
                 }
             })
         ]
