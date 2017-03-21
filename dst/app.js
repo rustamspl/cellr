@@ -79,6 +79,9 @@ var EventEmitter = Class(Object.create(null), function() {
 
 var global = Function('return this;')();
 
+/**
+ * @typesign (cb: ());
+ */
 var nextTick;
 /* istanbul ignore next */
 if (global.process && process.toString() == '[object process]' && process.nextTick) {
@@ -834,6 +837,21 @@ var Node = Class$1(Object.create(null), function(_super) {
     };
 });
 
+//-------------------------
+// var ed = new Cell();
+// var ed2 = new Cell();
+// var press = new Cell();
+// var txt = new Cell(function() {
+//     return ' pos:' + (pos.get() || 'rr') + ' press:' + (press.get() || 'zzz');
+// });
+// var txt2 = new Cell(function() {
+//     return 'ed:' + ed.get() + ' txt2:' + txt.get() + ' double:' + (pos.get() * 2);
+// });
+// var txt3 = new Cell(function() {
+//     return 'ed2:' + ed2.get() + ' txt2at:' + txt2.get();
+// });
+//-------------------------
+//-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var bodyAppend = appendChild.bind(document.body);
     var pos = new Cell();
