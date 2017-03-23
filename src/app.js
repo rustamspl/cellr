@@ -12,6 +12,7 @@ import {
     document
 } from './utils/doc';
 import nextTick from './utils/nextTick';
+import Promise from './js/promise';
 //-------------------------
 addEventListener.call(document, 'DOMContentLoaded', function() {
     var pos = new Cell();
