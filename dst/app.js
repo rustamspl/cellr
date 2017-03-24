@@ -844,6 +844,10 @@ var Node = Class$1(Object.create(null), function(_super) {
                 this._factory = opts.factory || _defaultFactory;
                 var _handleObsListData = handleObsListData.bind(this);
                 data.on('change', _handleObsListData);
+            } else if (data instanceof Node) {
+                this._factory = opts.factory || _defaultFactory;
+                this._childs.push(data);
+                el.appendChild(data.el);
             } else if (data instanceof Array) {
                 this._factory = opts.factory || _defaultFactory;
                 for (var i = 0, l = data.length; i < l; i++) {
@@ -885,6 +889,44 @@ var Node = Class$1(Object.create(null), function(_super) {
         }
     };
 });
+//============
+var selectorParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g;
+var selectorCache = {};
+
+function compileSelector(selector) {
+    var match, tag = "div",
+        classes = [],
+        attrs = {};
+    while (match = selectorParser.exec(selector)) {
+        var type = match[1],
+            value = match[2];
+        if (type === "" && value !== "") tag = value;
+        else if (type === "#") attrs.id = value;
+        else if (type === ".") classes.push(value);
+        else if (match[3][0] === "[") {
+            var attrValue = match[6];
+            if (attrValue) attrValue = attrValue.replace(/\\(["'])/g, "$1").replace(/\\\\/g, "\\");
+            if (match[4] === "class") classes.push(attrValue);
+            else attrs[match[4]] = attrValue || true;
+        }
+    }
+    if (classes.length > 0) attrs.className = classes.join(" ");
+    return selectorCache[selector] = {
+        tag: tag,
+        attrs: attrs
+    }
+}
+function m(selector, data, props, factory) {
+    var cached = selectorCache[selector] || compileSelector(selector);
+    return new Node({
+        tag: cached.tag,
+        attrs: cached.attrs,
+        data: data,
+        props: props,
+        factory: factory
+    });
+}
+//==========
 
 (function(root) {
     if (root.Promise) return;
@@ -1020,71 +1062,46 @@ addEventListener.call(document, 'DOMContentLoaded', function() {
     });
     var a = new ObsList();
     //------
-    //------
-    var container = new Node({
-        data: [
-            view,
-            new Node({
-                tag: 'button',
-                data: 'btnAdd11',
-                props: {
-                    onclick: function() {
-                        // var r = Math.random();
-                        var c = new Cell(function() {
-                            return ttt.get() + ':' + pos.get();
-                        });
-                        a.push(c);
-                    }
+
+   
+    var container = m('', [
+        m('button.zzz', 'btnAdd11', {
+            onclick: function() {
+                // var r = Math.random();
+                var c = new Cell(function() {
+                    return ttt.get() + ':' + pos.get();
+                });
+                a.push(c);
+            }
+        }),
+        m('button', 'btnRemove11', {
+            onclick: function() {
+                a.remove(0);
+            }
+        }),
+        m('button', 'btnZzzzz', {
+            onclick: function() {
+                a.change([456, 678, 446]);
+            }
+        }),
+        m('', a, {}, function(val) {
+            var n = m('input.inp221','', {
+                value: ttt.get(),
+                onkeydown: function() {
+                    var _this = this;
+                    setTimeout(function() {
+                        ttt.set(_this.value);
+                    }, 1);
                 }
-            }),
-            new Node({
-                tag: 'button',
-                data: 'btnRemove11',
-                props: {
-                    onclick: function() {
-                        a.remove(0);
-                    }
-                }
-            }),
-            new Node({
-                tag: 'button',
-                data: 'btnZZZ11',
-                props: {
-                    onclick: function() {
-                        a.change([456, 678, 446]);
-                    }
-                }
-            }),
-            new Node({
-                data: a,
-                factory: function(val) {
-                    var n = new Node({
-                        tag: 'input',
-                        attrs: {
-                            'class': 'inp221'
-                        },
-                        props: {
-                            value: ttt.get(),
-                            onkeydown: function() {
-                               var _this=this;
-                                setTimeout(function(){
-                                   ttt.set(_this.value); 
-                                },1);
-                            }
-                        }
-                    });
-                    ttt.on('change', function(evt) {
-                        n.el.value = evt.value;
-                        return true;
-                    });
-                    var root = new Node({
-                        data: [n, val]
-                    });
-                    return root;
-                }
-            })
-        ]
-    });
+            });
+            ttt.on('change', function(evt) {
+                n.el.value = evt.value;
+                return true;
+            });
+            return m('', [n, val]);
+        })
+    ]);
+ 
     document.body.appendChild(container.el);
     addEventListener.call(document, 'mousemove', function(evt) {
         pos.set(evt.clientX);
